@@ -13,8 +13,6 @@ require (
 	github.com/go-redis/redis/v8 v8.11.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
-	github.com/jageros/hawos v0.1.1
-	github.com/jageros/timer v1.0.3
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/nosixtools/solarlunar v0.0.0-20200711032723-669c9e27ecc5
 	github.com/nsqio/go-nsq v1.0.8
@@ -55,13 +53,10 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-redis/redis v6.15.7+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/go-xorm/builder v0.3.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/jageros/evq v1.0.3 // indirect
-	github.com/jageros/group v1.0.1 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/gofork v1.0.0 // indirect
@@ -85,7 +80,6 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
-	github.com/wechatpay-apiv3/wechatpay-go v0.2.7 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.0 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect

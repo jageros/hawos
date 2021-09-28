@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"github.com/jageros/timer"
+	"github.com/jageros/hawox/timer"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io"

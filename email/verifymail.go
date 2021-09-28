@@ -13,8 +13,8 @@
 package email
 
 import (
-	"context"
 	"fmt"
+	"github.com/jageros/hawox/contextx"
 	"github.com/jordan-wright/email"
 	"mime"
 	"time"
@@ -58,7 +58,7 @@ func (v *VerifyMail) mail() *email.Email {
 }
 
 func (v *VerifyMail) Send() {
-	opt_.g.Go(func(ctx context.Context) error {
+	opt_.g.Go(func(ctx contextx.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

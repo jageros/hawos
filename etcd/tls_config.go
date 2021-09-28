@@ -15,7 +15,7 @@ package etcd
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/jageros/hawos/log"
+	"github.com/jageros/hawox/logx"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -57,7 +57,7 @@ func TLSConfig() (*tls.Config, error) {
 func TlsTransport() (tr *http.Transport) {
 	tlsConfig, err := TLSConfig()
 	if err != nil {
-		log.Debugf("Create tls error, error=\"%s\"", err.Error())
+		logx.Debugf("Create tls error, error=\"%s\"", err.Error())
 		return
 	}
 	tr = &http.Transport{
