@@ -17,9 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/examples/cache/roomcache"
-	"github.com/jageros/hawox/examples/cache/usercache"
-	"github.com/jageros/hawox/examples/protos/pb"
 	"github.com/jageros/hawox/httpx"
 	"github.com/jageros/hawox/jwt"
 	"github.com/jageros/hawox/logx"
@@ -69,14 +66,14 @@ func Broadcast(data []byte, target *pbf.Target) error {
 	})
 }
 
-func Init(ctx contextx.Context, r *gin.RouterGroup, relativePath string) {
+func Init(ctx contextx.Context, r *gin.RouterGroup, relativePath string, onConnect, onDisConnect func(session *melody.Session)) {
 	ss = &service{
 		ctx:         ctx,
 		m:           melody.New(),
 		callTimeout: time.Second * 5,
 	}
-	ss.m.HandleConnect(ss.onConnect)
-	ss.m.HandleDisconnect(ss.onDisConnect)
+	ss.m.HandleConnect(onConnect)
+	ss.m.HandleDisconnect(onDisConnect)
 	ss.m.HandleMessageBinary(ss.handleMessage)
 
 	r.GET(relativePath, jwt.CheckToken, ss.handler)
@@ -98,27 +95,28 @@ func (s *service) handler(c *gin.Context) {
 	}
 }
 
-func (s *service) onConnect(session *melody.Session) {
-	uid, exist1 := session.Get("uid")
-	if !exist1 {
-		return
-	}
-	roomId, exist2 := session.Get("roomId")
-	if exist2 {
-		err := roomcache.EnterRoom(roomId.(string), uid.(string))
-		if err != nil {
-			logx.Errorf("roomcache.EnterRoom err: %v", err)
-		}
-	}
-	logx.Infof("ws connect uid=%s room_id=%s", uid, roomId)
-}
-
-func (s *service) onDisConnect(session *melody.Session) {
-	uid, _ := session.Get("uid")
-	roomId, _ := session.Get("roomId")
-	logx.Infof("ws disconnect uid=%s room_id=%s", uid, roomId)
-	usercache.Disconnect(uid.(string))
-}
+//
+//func (s *service) onConnect(session *melody.Session) {
+//	uid, exist1 := session.Get("uid")
+//	if !exist1 {
+//		return
+//	}
+//	roomId, exist2 := session.Get("roomId")
+//	if exist2 {
+//		err := roomcache.EnterRoom(roomId.(string), uid.(string))
+//		if err != nil {
+//			logx.Errorf("roomcache.EnterRoom err: %v", err)
+//		}
+//	}
+//	logx.Infof("ws connect uid=%s room_id=%s", uid, roomId)
+//}
+//
+//func (s *service) onDisConnect(session *melody.Session) {
+//	uid, _ := session.Get("uid")
+//	roomId, _ := session.Get("roomId")
+//	logx.Infof("ws disconnect uid=%s room_id=%s", uid, roomId)
+//	usercache.Disconnect(uid.(string))
+//}
 
 func (s *service) handleMessage(session *melody.Session, bytes []byte) {
 	start := time.Now()
@@ -166,7 +164,7 @@ func (s *service) handleMessage(session *melody.Session, bytes []byte) {
 	tc, err := jwt.ParseToken(arg.Token)
 
 	if err != nil {
-		resp.Code = pb.ErrCode_AuthErr.Code()
+		resp.Code = errcode.VerifyErr.Code()
 		return
 	}
 
@@ -179,7 +177,7 @@ func (s *service) handleMessage(session *melody.Session, bytes []byte) {
 	appNames := selector.GetName(arg.GetMsgID())
 
 	if len(appNames) <= 0 {
-		resp.Code = pb.ErrCode_ServiceNotFound.Code()
+		resp.Code = errcode.ServiceNotFound.Code()
 		return
 	}
 
