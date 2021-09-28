@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pbf;
+
+service Broadcast {
+  rpc Frontend (QueueMsg) returns (Status) {}
+}
+
+message QueueMsg {
+  bytes Data = 1;
+  Target Targets = 2;
+}
+
+message Target {
+  map<string, bool> GroupId = 1;
+  map<string, bool> Uids = 2;
+  map<string, bool> UnlessUids = 3;
+}
+
+message Status {
+  int32 Code = 1;
+  string Msg = 2;
+}

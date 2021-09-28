@@ -1,0 +1,51 @@
+server:
+  id: 1
+  mode: "release"
+
+frontend:
+  addr: "ws://testapi.gzjy-game.xyz/ws"
+
+log:
+  dir: "logs"
+  caller: true
+  request: true
+
+http:
+  ip: "0.0.0.0"
+  port: 8001
+
+rpc:
+  ip: "127.0.0.1"
+  port: 8081
+
+mysql:
+  addr: "127.0.0.1:3306"
+  user: "root"
+  password: "QianYin@66"
+  database: "hawox"
+
+mongo:
+  addr: "127.0.0.1:27017"
+  database: "attribute"
+#  user: "mongo-user"
+#  password: "mongo-password"
+
+etcd:
+  addrs: "127.0.0.1:2379"
+#  user: "etcd-user"
+#  password: "etcd-password"
+
+redis:
+  enable: true
+  addrs: "127.0.0.1:7001;127.0.0.1:7002;127.0.0.1:7003;127.0.0.1:7004;127.0.0.1:7005;127.0.0.1:7006;127.0.0.1:7007"
+  db: 0
+#  user: "redis-user"
+#  password: "redis-passwd"
+
+queue:
+  type: "kafka"
+  addrs: "127.0.0.1:9092"
+
+#queue:
+#  type: "nsq"
+#  addrs: "127.0.0.1:4161"

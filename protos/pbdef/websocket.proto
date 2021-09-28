@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pbf;
+
+message Request {
+  int32 MsgID = 1;
+  string Token = 2;
+  bytes Payload = 3;
+}
+
+message Response {
+  int32 MsgID = 1;
+  int32 Code = 2;
+  bytes Payload = 3;
+}
