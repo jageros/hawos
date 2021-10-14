@@ -9,6 +9,7 @@ log:
   dir: "logs"
   caller: true
   request: true
+  stat: false
 
 http:
   ip: "0.0.0.0"

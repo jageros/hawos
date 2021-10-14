@@ -42,6 +42,7 @@ var (
 	keyLogDir     = "log.dir"
 	keyLogCaller  = "log.caller"
 	keyLogRequest = "log.request"
+	keyLogStat    = "log.stat"
 	// http
 	keyHttpIp   = "http.ip"
 	keyHttpPort = "http.port"
@@ -85,6 +86,7 @@ type Option struct {
 	LogDir     string // log目录
 	LogCaller  bool   // 是否开启记录输出日志的代码文件行号
 	LogRequest bool   // 是否开启http请求的日志记录
+	LogStat    bool   // 是否开启系统状态日志输出
 
 	// http服务配置
 	HttpIp   string
@@ -165,6 +167,7 @@ func (op *Option) load(v *viper.Viper) {
 	Options.LogDir = v.GetString(keyLogDir)
 	Options.LogCaller = v.GetBool(keyLogCaller)
 	Options.LogRequest = v.GetBool(keyLogRequest)
+	Options.LogStat = v.GetBool(keyLogStat)
 	//http
 	Options.HttpIp = v.GetString(keyHttpIp)
 	Options.HttpPort = v.GetInt(keyHttpPort)
@@ -231,8 +234,13 @@ func (op *Option) load(v *viper.Viper) {
 		logOpfs = append(logOpfs, logx.SetFileOut(logPath()))
 	}
 
+	if !Options.LogStat {
+		logx.DisableStat()
+	}
+
 	// 初始化日志
 	logx.Init(logLevel, logOpfs...)
+
 }
 
 func DefaultRedis(option *Option) {
@@ -289,6 +297,7 @@ func Parse(name string, opts ...func(*Option)) (ctx contextx.Context, wait func(
 	pflag.String(keyLogDir, Options.LogDir, "Log dir")
 	pflag.Bool(keyLogCaller, Options.LogCaller, "log caller")
 	pflag.Bool(keyLogRequest, Options.LogRequest, "log request")
+	pflag.Bool(keyLogStat, Options.LogStat, "log stat")
 	// http
 	pflag.String(keyHttpIp, Options.HttpIp, "Http listen ip")
 	pflag.Int(keyHttpPort, Options.HttpPort, "HTTP server port")
