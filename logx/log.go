@@ -14,6 +14,7 @@ package logx
 
 import (
 	"fmt"
+	"github.com/tal-tech/go-zero/core/logx"
 	"io"
 )
 
@@ -107,6 +108,10 @@ func SetRequest() Option {
 	return logOptionFunc(func(log *Log) {
 		log.NeedRequestLog = true
 	})
+}
+
+func DisableStat() {
+	logx.DisableStat()
 }
 
 func SetFileOut(path string) Option {

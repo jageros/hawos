@@ -19,7 +19,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
-	github.com/tal-tech/go-zero v1.1.10
+	github.com/tal-tech/go-zero v1.2.1
 	github.com/xiaonanln/go-xnsyncutil v0.0.5
 	go.etcd.io/etcd/client/v3 v3.5.0
 	go.uber.org/zap v1.19.0
