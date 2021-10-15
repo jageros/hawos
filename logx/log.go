@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"github.com/tal-tech/go-zero/core/logx"
 	"io"
+	"strings"
 )
 
 const (
@@ -114,7 +115,20 @@ func DisableStat() {
 	logx.DisableStat()
 }
 
-func SetFileOut(path string) Option {
+func SetFileOut(dir string, appName string) Option {
+	var path string
+	if strings.HasSuffix(dir, "/") {
+		path = fmt.Sprintf("%s%s.log", dir, appName)
+	} else {
+		path = fmt.Sprintf("%s/%s.log", dir, appName)
+	}
+	logx.SetUp(logx.LogConf{
+		ServiceName: appName,
+		Mode:        "file",
+		Level:       "info",
+		Path:        path,
+		KeepDays:    7,
+	})
 	return logOptionFunc(func(log *Log) {
 		log.adapters[FileTypeRequest].setFileOut(fmt.Sprintf("%s.request", path))
 		log.adapters[FileTypeLog].setFileOut(path)

@@ -150,13 +150,13 @@ func defaultOption() *Option {
 	return op
 }
 
-// logPath log文件输出的路径，根据AppName来命名
-func logPath() string {
-	if strings.HasSuffix(Options.LogDir, "/") {
-		return fmt.Sprintf("%s%s.log", Options.LogDir, Options.AppName)
-	}
-	return fmt.Sprintf("%s/%s.log", Options.LogDir, Options.AppName)
-}
+//// logPath log文件输出的路径，根据AppName来命名
+//func logPath() string {
+//	if strings.HasSuffix(Options.LogDir, "/") {
+//		return fmt.Sprintf("%s%s.log", Options.LogDir, Options.AppName)
+//	}
+//	return fmt.Sprintf("%s/%s.log", Options.LogDir, Options.AppName)
+//}
 
 // load 从viper中获取解析出来的参数初始化option中的字段
 func (op *Option) load(v *viper.Viper) {
@@ -231,7 +231,7 @@ func (op *Option) load(v *viper.Viper) {
 		logOpfs = append(logOpfs, logx.SetSource(source))
 	}
 	if Options.LogDir != "" {
-		logOpfs = append(logOpfs, logx.SetFileOut(logPath()))
+		logOpfs = append(logOpfs, logx.SetFileOut(Options.LogDir, Options.AppName))
 	}
 
 	if !Options.LogStat {
