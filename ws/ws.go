@@ -36,6 +36,22 @@ type service struct {
 	callTimeout time.Duration
 }
 
+func OnMessage(fn func(session *melody.Session, bytes []byte)) {
+	ss.m.HandleMessage(fn)
+}
+
+func OnMessageBinary(fn func(session *melody.Session, bytes []byte)) {
+	ss.m.HandleMessageBinary(fn)
+}
+
+func OnConnect(fn func(*melody.Session)) {
+	ss.m.HandleConnect(fn)
+}
+
+func OnDisConnect(fn func(*melody.Session)) {
+	ss.m.HandleDisconnect(fn)
+}
+
 func Broadcast(data []byte, target *pbf.Target) error {
 	if target == nil || target.GroupId["0"] {
 		return ss.m.BroadcastBinary(data)
@@ -66,16 +82,13 @@ func Broadcast(data []byte, target *pbf.Target) error {
 	})
 }
 
-func Init(ctx contextx.Context, r *gin.RouterGroup, relativePath string, onConnect, onDisConnect func(session *melody.Session)) {
+func Init(ctx contextx.Context, r *gin.RouterGroup, relativePath string) {
 	ss = &service{
 		ctx:         ctx,
 		m:           melody.New(),
 		callTimeout: time.Second * 5,
 	}
-	ss.m.HandleConnect(onConnect)
-	ss.m.HandleDisconnect(onDisConnect)
 	ss.m.HandleMessageBinary(ss.handleMessage)
-
 	r.GET(relativePath, jwt.CheckToken, ss.handler)
 }
 
@@ -94,29 +107,6 @@ func (s *service) handler(c *gin.Context) {
 		httpx.ErrInterrupt(c, errcode.WithErrcode(-1, err))
 	}
 }
-
-//
-//func (s *service) onConnect(session *melody.Session) {
-//	uid, exist1 := session.Get("uid")
-//	if !exist1 {
-//		return
-//	}
-//	roomId, exist2 := session.Get("roomId")
-//	if exist2 {
-//		err := roomcache.EnterRoom(roomId.(string), uid.(string))
-//		if err != nil {
-//			logx.Errorf("roomcache.EnterRoom err: %v", err)
-//		}
-//	}
-//	logx.Infof("ws connect uid=%s room_id=%s", uid, roomId)
-//}
-//
-//func (s *service) onDisConnect(session *melody.Session) {
-//	uid, _ := session.Get("uid")
-//	roomId, _ := session.Get("roomId")
-//	logx.Infof("ws disconnect uid=%s room_id=%s", uid, roomId)
-//	usercache.Disconnect(uid.(string))
-//}
 
 func (s *service) handleMessage(session *melody.Session, bytes []byte) {
 	start := time.Now()
