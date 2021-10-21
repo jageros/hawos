@@ -157,12 +157,12 @@ func (m *Melody) HandleClose(fn func(*Session, int, string) error) {
 }
 
 // HandleRequest upgrades http requests to websocket connections and dispatches them to be handled by the melody instance.
-func (m *Melody) Connect(addr string, keys ...map[string]interface{}) error {
+func (m *Melody) Connect(addr string, keys ...map[string]interface{}) (*Session, error) {
 	return m.ConnectWithHeader(addr, nil, keys...)
 }
 
 // HandleRequestWithKeys does the same as HandleRequest but populates session.Keys with keys.
-func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[string]interface{}) error {
+func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[string]interface{}) (*Session, error) {
 	//if m.hub.closed() {
 	//	return errors.New("melody instance is closed")
 	//}
@@ -172,7 +172,7 @@ func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[
 	conn, r, err := websocket.DefaultDialer.DialContext(ctx, addr, header)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	kvs := map[string]interface{}{}
@@ -226,7 +226,7 @@ func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[
 		return nil
 	})
 
-	return nil
+	return session, nil
 }
 
 // Broadcast broadcasts a text message to all sessions.

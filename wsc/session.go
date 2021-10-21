@@ -21,6 +21,14 @@ type Session struct {
 	rwmutex  *sync.RWMutex
 }
 
+func (s *Session) Send(bytes []byte) {
+	msg := &envelope{
+		t:   websocket.TextMessage,
+		msg: bytes,
+	}
+	s.writeMessage(msg)
+}
+
 func (s *Session) writeMessage(message *envelope) {
 	if s.closed() {
 		s.melody.errorHandler(s, errors.New("tried to write to closed a session"))
@@ -202,7 +210,6 @@ func (s *Session) CloseWithMsg(msg []byte) error {
 func (s *Session) IsClosed() bool {
 	return s.closed()
 }
-
 
 // Set is used to store a new key/value pair exclusivelly for this session.
 // It also lazy initializes s.Keys if it was not used previously.
