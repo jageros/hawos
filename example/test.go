@@ -19,8 +19,8 @@ import (
 )
 
 func main() {
-	var str = "xxxxxxxwhact the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the fuckwhat the the fuckwhat the fuckwhat the fuckwhat the fuck"
-	fmt.Printf("源数据：%v\n 长度=%d\n", []byte(str), len(str))
+	var str = "fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!fuck!!"
+	fmt.Printf("源数据：%v 长度=%d\n", []byte(str), len(str))
 	bt, err := rsa.DefaultEncrypt([]byte(str))
 	if err != nil {
 		log.Fatal(err)
@@ -30,6 +30,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("加密解密后数据：%v\n", ss)
+	fmt.Printf("加密解密后数据：%s\n", string(ss))
 	fmt.Printf("源数据长度=%d 加密后长度=%d\n", len(ss), len(bt))
 }

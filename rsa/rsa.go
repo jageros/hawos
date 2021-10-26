@@ -151,8 +151,8 @@ func RSAEncrypt(plaintext []byte, publicKey *rsa.PublicKey) ([]byte, error) {
 	var resp []byte
 	for i := 0; i < srcLen; i += stage {
 		end := i + stage
-		if end >= srcLen {
-			end = srcLen - 1
+		if end > srcLen {
+			end = srcLen
 		}
 		bts := plaintext[i:end]
 		its, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, bts)
@@ -175,8 +175,8 @@ func RSADecrypt(cipher []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	var resp []byte
 	for i := 0; i < cipherLen; i += stage {
 		end := i + stage
-		if end >= cipherLen {
-			end = cipherLen - 1
+		if end > cipherLen {
+			end = cipherLen
 		}
 		bts := cipher[i:end]
 		its, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, bts)
