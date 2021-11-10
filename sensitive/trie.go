@@ -248,4 +248,3 @@ func (node *Node) IsRootNode() bool {
 func (node *Node) IsPathEnd() bool {
 	return node.isPathEnd
 }
-

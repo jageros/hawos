@@ -118,7 +118,3 @@ func (filter *Filter) Validate(text string) (bool, string) {
 func (filter *Filter) RemoveNoise(text string) string {
 	return filter.noise.ReplaceAllString(text, "")
 }
-
-
-
-

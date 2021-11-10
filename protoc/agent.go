@@ -25,7 +25,7 @@ func init() {
 }
 
 type Agent struct {
-	Uid     string
+	Uid string
 }
 
 func getAgent(uid string) *Agent {

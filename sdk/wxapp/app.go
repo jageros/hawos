@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	appid = ""
+	appid     = ""
 	appSecret = ""
 )
 
