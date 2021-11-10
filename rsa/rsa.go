@@ -141,8 +141,8 @@ func ReadPublicKey(path string) (*rsa.PublicKey, error) {
 	return nil, errors.New("PublicKey is not rsa")
 }
 
-// RSAEncrypt RSA公钥加密
-func RSAEncrypt(plaintext []byte, publicKey *rsa.PublicKey) ([]byte, error) {
+// Encrypt RSA公钥加密
+func Encrypt(plaintext []byte, publicKey *rsa.PublicKey) ([]byte, error) {
 	srcLen := len(plaintext)
 	stage := publicKey.Size() - 11
 	if srcLen <= stage {
@@ -164,8 +164,8 @@ func RSAEncrypt(plaintext []byte, publicKey *rsa.PublicKey) ([]byte, error) {
 	return resp, nil
 }
 
-// RSADecrypt  RSA私钥解密
-func RSADecrypt(cipher []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
+// Decrypt  RSA私钥解密
+func Decrypt(cipher []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	cipherLen := len(cipher)
 	stage := privateKey.Size()
 	if cipherLen <= stage {
@@ -216,7 +216,7 @@ func DefaultEncrypt(plaintext []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return RSAEncrypt(plaintext, publicKey)
+	return Encrypt(plaintext, publicKey)
 }
 
 func DefaultDecrypt(cipher []byte) ([]byte, error) {
@@ -224,7 +224,7 @@ func DefaultDecrypt(cipher []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return RSADecrypt(cipher, privateKey)
+	return Decrypt(cipher, privateKey)
 }
 
 const (
