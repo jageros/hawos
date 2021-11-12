@@ -30,10 +30,75 @@ import (
 
 var ss *service
 
+type Options interface {
+	SetCallTimeout(t time.Duration)
+	SetRelativePath(relativePath string)
+	SetKeys(keys []string)
+	SetAuth(auth func(c *gin.Context))
+}
+
 type service struct {
-	ctx         contextx.Context
-	m           *melody.Melody
-	callTimeout time.Duration
+	ctx          contextx.Context
+	m            *melody.Melody
+	callTimeout  time.Duration
+	relativePath string
+	keys         []string
+	auth         func(c *gin.Context)
+}
+
+type Filter struct {
+	All        bool
+	UnlessKeys map[string]map[interface{}]struct{}
+	Keys       map[string]map[interface{}]struct{}
+}
+
+func (f *Filter) AddKeys(key string, vals ...interface{}) {
+	if f.Keys == nil {
+		f.Keys = map[string]map[interface{}]struct{}{
+			key: {},
+		}
+	} else if _, ok := f.Keys[key]; !ok {
+		f.Keys[key] = map[interface{}]struct{}{}
+	}
+	for _, v := range vals {
+		f.Keys[key][v] = struct{}{}
+	}
+}
+
+func (f *Filter) AddUnlessKeys(key string, vals ...interface{}) {
+	if f.UnlessKeys == nil {
+		f.UnlessKeys = map[string]map[interface{}]struct{}{
+			key: {},
+		}
+	} else if _, ok := f.UnlessKeys[key]; !ok {
+		f.UnlessKeys[key] = map[interface{}]struct{}{}
+	}
+	for _, v := range vals {
+		f.UnlessKeys[key][v] = struct{}{}
+	}
+}
+
+func NewFilter(all bool) *Filter {
+	filter := &Filter{
+		All:        all,
+		UnlessKeys: map[string]map[interface{}]struct{}{},
+		Keys:       map[string]map[interface{}]struct{}{},
+	}
+	return filter
+}
+
+func (s *service) SetCallTimeout(t time.Duration) {
+	s.callTimeout = t
+}
+func (s *service) SetRelativePath(relativePath string) {
+	s.relativePath = relativePath
+}
+func (s *service) SetKeys(keys []string) {
+	s.keys = keys
+}
+
+func (s *service) SetAuth(auth func(c *gin.Context)) {
+	s.auth = auth
 }
 
 func OnMessage(fn func(session *melody.Session, bytes []byte)) {
@@ -52,57 +117,70 @@ func OnDisConnect(fn func(*melody.Session)) {
 	ss.m.HandleDisconnect(fn)
 }
 
-func Broadcast(data []byte, target *pbf.Target) error {
-	if target == nil || target.GroupId["0"] {
+func Broadcast(data []byte, filter *Filter) error {
+	if filter == nil || filter.All {
 		return ss.m.BroadcastBinary(data)
 	}
 
 	return ss.m.BroadcastBinaryFilter(data, func(session *melody.Session) bool {
-		uidi, exist := session.Get("uid")
-		if !exist {
-			return false
-		}
-		uid := uidi.(string)
-		roomIdi, exist := session.Get("roomId")
-		if !exist {
-			return false
-		}
-		roomId := roomIdi.(string)
 
-		if target.UnlessUids[uid] {
-			return false
+		for k, v := range session.Keys {
+			if vs, ok := filter.UnlessKeys[k]; ok {
+				if _, ok := vs[v]; ok {
+					return false
+				}
+			}
 		}
-		if target.GroupId[roomId] {
-			return true
+
+		for k, v := range session.Keys {
+			if vs, ok := filter.Keys[k]; ok {
+				if _, ok := vs[v]; ok {
+					return true
+				}
+			}
 		}
-		if target.Uids[uid] {
-			return true
-		}
+
 		return false
 	})
 }
 
-func Init(ctx contextx.Context, r *gin.RouterGroup, relativePath string) {
+func Init(ctx contextx.Context, r *gin.RouterGroup, opfs ...func(opt Options)) {
 	ss = &service{
 		ctx:         ctx,
 		m:           melody.New(),
 		callTimeout: time.Second * 5,
+		//auth:         jwt.CheckToken,
+		//Keys:         []string{"uid", "roomId"},
+		relativePath: "/gate",
+	}
+	for _, opf := range opfs {
+		opf(ss)
 	}
 	ss.m.HandleMessageBinary(ss.handleMessage)
-	r.GET(relativePath, jwt.CheckToken, ss.handler)
+	if ss.auth != nil {
+		r.GET(ss.relativePath, ss.auth, ss.handler)
+	} else {
+		r.GET(ss.relativePath, ss.handler)
+	}
+
 }
 
 func (s *service) handler(c *gin.Context) {
-	uid, ok := jwt.Uid(c)
-	if !ok {
-		return
+	var keys = map[string]interface{}{}
+	for _, k := range s.keys {
+		var vi interface{}
+		v := c.GetHeader(k)
+		if v != "" {
+			vi = v
+		} else {
+			vi, _ = c.Get(k)
+		}
+		if vi != nil {
+			keys[k] = v
+		}
 	}
-	roomId := c.GetHeader("X-RoomId")
-	if roomId == "" {
-		httpx.ErrInterrupt(c, errcode.InvalidParam)
-		return
-	}
-	err := s.m.HandleRequestWithKeys(c.Writer, c.Request, map[string]interface{}{"uid": uid, "roomId": roomId})
+
+	err := s.m.HandleRequestWithKeys(c.Writer, c.Request, keys)
 	if err != nil {
 		httpx.ErrInterrupt(c, errcode.WithErrcode(-1, err))
 	}
