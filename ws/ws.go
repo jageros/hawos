@@ -33,7 +33,7 @@ var ss *service
 type Options interface {
 	SetCallTimeout(t time.Duration)
 	SetRelativePath(relativePath string)
-	SetKeys(keys []string)
+	SetKeys(keys ...string)
 	SetAuth(auth func(c *gin.Context))
 }
 
@@ -47,9 +47,8 @@ type service struct {
 }
 
 type Filter struct {
-	All        bool
-	UnlessKeys map[string]map[interface{}]struct{}
-	Keys       map[string]map[interface{}]struct{}
+	isRefused bool
+	Keys      map[string]map[interface{}]struct{}
 }
 
 func (f *Filter) AddKeys(key string, vals ...interface{}) {
@@ -65,26 +64,25 @@ func (f *Filter) AddKeys(key string, vals ...interface{}) {
 	}
 }
 
-func (f *Filter) AddUnlessKeys(key string, vals ...interface{}) {
-	if f.UnlessKeys == nil {
-		f.UnlessKeys = map[string]map[interface{}]struct{}{
+func newFilter(isRefused bool, key string, vals ...interface{}) *Filter {
+	filter := &Filter{
+		isRefused: isRefused,
+		Keys: map[string]map[interface{}]struct{}{
 			key: {},
-		}
-	} else if _, ok := f.UnlessKeys[key]; !ok {
-		f.UnlessKeys[key] = map[interface{}]struct{}{}
+		},
 	}
 	for _, v := range vals {
-		f.UnlessKeys[key][v] = struct{}{}
-	}
-}
-
-func NewFilter(all bool) *Filter {
-	filter := &Filter{
-		All:        all,
-		UnlessKeys: map[string]map[interface{}]struct{}{},
-		Keys:       map[string]map[interface{}]struct{}{},
+		filter.Keys[key][v] = struct{}{}
 	}
 	return filter
+}
+
+func NewBlacklistFilter(key string, vals ...interface{}) *Filter {
+	return newFilter(true, key, vals...)
+}
+
+func NewWhitelistFilter(key string, vals ...interface{}) *Filter {
+	return newFilter(false, key, vals...)
 }
 
 func (s *service) SetCallTimeout(t time.Duration) {
@@ -93,7 +91,7 @@ func (s *service) SetCallTimeout(t time.Duration) {
 func (s *service) SetRelativePath(relativePath string) {
 	s.relativePath = relativePath
 }
-func (s *service) SetKeys(keys []string) {
+func (s *service) SetKeys(keys ...string) {
 	s.keys = keys
 }
 
@@ -118,18 +116,21 @@ func OnDisConnect(fn func(*melody.Session)) {
 }
 
 func Broadcast(data []byte, filter *Filter) error {
-	if filter == nil || filter.All {
-		return ss.m.BroadcastBinary(data)
+	if filter == nil {
+		return ss.m.Broadcast(data)
 	}
 
-	return ss.m.BroadcastBinaryFilter(data, func(session *melody.Session) bool {
+	return ss.m.BroadcastFilter(data, func(session *melody.Session) bool {
 
-		for k, v := range session.Keys {
-			if vs, ok := filter.UnlessKeys[k]; ok {
-				if _, ok := vs[v]; ok {
-					return false
+		if filter.isRefused {
+			for k, v := range session.Keys {
+				if vs, ok := filter.Keys[k]; ok {
+					if _, ok := vs[v]; ok {
+						return false
+					}
 				}
 			}
+			return true
 		}
 
 		for k, v := range session.Keys {
@@ -139,7 +140,35 @@ func Broadcast(data []byte, filter *Filter) error {
 				}
 			}
 		}
+		return false
 
+	})
+}
+
+func BroadcastBinary(data []byte, filter *Filter) error {
+	if filter == nil {
+		return ss.m.BroadcastBinary(data)
+	}
+
+	return ss.m.BroadcastBinaryFilter(data, func(session *melody.Session) bool {
+
+		if filter.isRefused {
+			for k, v := range session.Keys {
+				if vs, ok := filter.Keys[k]; ok {
+					if _, ok := vs[v]; ok {
+						return false
+					}
+				}
+			}
+		} else {
+			for k, v := range session.Keys {
+				if vs, ok := filter.Keys[k]; ok {
+					if _, ok := vs[v]; ok {
+						return true
+					}
+				}
+			}
+		}
 		return false
 	})
 }
@@ -173,10 +202,15 @@ func (s *service) handler(c *gin.Context) {
 		if v != "" {
 			vi = v
 		} else {
-			vi, _ = c.Get(k)
+			v, ok := httpx.DecodeUrlVal(c, k)
+			if ok {
+				vi = v
+			} else {
+				vi, _ = c.Get(k)
+			}
 		}
 		if vi != nil {
-			keys[k] = v
+			keys[k] = vi
 		}
 	}
 
