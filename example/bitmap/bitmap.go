@@ -17,6 +17,7 @@ import (
 	"github.com/jageros/hawox/bitmap"
 	"github.com/jageros/hawox/contextx"
 	"runtime"
+	"runtime/debug"
 )
 
 func main() {
@@ -39,20 +40,15 @@ func main() {
 	})
 
 	ctx.Go(func(ctx contextx.Context) error {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-ch:
-			runtime.GC()
-			fmt.Println("Clear")
-		}
-		return nil
-	})
-
-	ctx.Go(func(ctx contextx.Context) error {
 		<-ctx.Done()
 		return ctx.Err()
 	})
+
+	<-ch
+	runtime.GC()
+
+	debug.FreeOSMemory()
+	fmt.Println("Clear", runtime.NumCPU())
 
 	err := ctx.Wait()
 	fmt.Println(err)

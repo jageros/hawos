@@ -46,28 +46,3 @@ func (bm *Bitmap) Clear() {
 	bm.words = nil
 	bm.length = 0
 }
-
-//func (bitmap *Bitmap) Len() int {
-//	return bitmap.length
-//}
-//
-//func (bitmap *Bitmap) String() string {
-//	var buf bytes.Buffer
-//	buf.WriteByte('{')
-//	for i, v := range bitmap.words {
-//		if v == 0 {
-//			continue
-//		}
-//		for j := uint(0); j < 64; j++ {
-//			if v&(1<<j) != 0 {
-//				if buf.Len() > len("{") {
-//					buf.WriteByte(' ')
-//				}
-//				fmt.Fprintf(&buf, "%d", 64*uint(i)+j)
-//			}
-//		}
-//	}
-//	buf.WriteByte('}')
-//	fmt.Fprintf(&buf,"\nLength: %d", bitmap.length)
-//	return buf.String()
-//}
