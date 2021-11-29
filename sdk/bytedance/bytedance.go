@@ -41,7 +41,7 @@ func Login(code, anyCode string) (resp Response, err error) {
 		"anonymous_code": anyCode,
 		"code":           code,
 	}
-	err = httpc.Request2(httpc.POST, url, httpc.JSON, arg, nil, &resp)
+	err = httpc.RequestWithInterface(httpc.POST, url, httpc.JSON, arg, nil, &resp)
 	return
 }
 

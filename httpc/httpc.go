@@ -43,7 +43,7 @@ func init() {
 	cli = http.DefaultClient
 }
 
-func Request2(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string, result interface{}) (err error) {
+func Request(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string) (result []byte, err error) {
 	var data []byte
 
 	switch contentType {
@@ -78,55 +78,22 @@ func Request2(method METHOD, url string, contentType string, arg map[string]inte
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("ServerReturnErr: " + resp.Status)
+		return nil, errors.New("ServerReturnErr: " + resp.Status)
 	}
-
-	err = json.Unmarshal(body, &result)
-	return
+	return body, nil
 }
 
-func Request(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string) (result map[string]interface{}, err error) {
-	err = Request2(method, url, contentType, arg, header, &result)
+func RequestWithInterface(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string, result interface{}) error {
+	body, err := Request(method, url, contentType, arg, header)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, &result)
+}
+
+func RequestReturnMap(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string) (result map[string]interface{}, err error) {
+	err = RequestWithInterface(method, url, contentType, arg, header, &result)
 	return
-	//var data []byte
-	//
-	//switch contentType {
-	//case JSON:
-	//	if arg != nil {
-	//		data, err = json.Marshal(arg)
-	//		if err != nil {
-	//			return
-	//		}
-	//	}
-	//
-	//case FORM:
-	//	data = marshal(arg)
-	//}
-	//
-	//req, err := http.NewRequest(method.String(), url, bytes.NewBuffer(data))
-	//if err != nil {
-	//	return
-	//}
-	//
-	//req.Header.Set("Content-Type", contentType)
-	//
-	//SetHeader(req, header)
-	//
-	//resp, err := cli.Do(req)
-	//if err != nil {
-	//	return
-	//}
-	//defer resp.Body.Close()
-	//body, err := ioutil.ReadAll(resp.Body)
-	//if err != nil {
-	//	return
-	//}
-	//if resp.StatusCode != http.StatusOK {
-	//	return nil, errors.New("ServerReturnErr: " + resp.Status)
-	//}
-	//
-	//err = json.Unmarshal(body, &result)
-	//return
 }
 
 func marshal(arg map[string]interface{}) []byte {

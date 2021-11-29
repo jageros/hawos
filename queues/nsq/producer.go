@@ -38,7 +38,7 @@ func (p *Producer) getNodeAddr() (string, error) {
 	addrs := fmt.Sprintf(p.opt.Addrs, ";")
 	idx := rand.Intn(len(addrs))
 	url := fmt.Sprintf("http://%s/nodes", addrs[idx])
-	resp, err := httpc.Request(httpc.GET, url, httpc.FORM, nil, nil)
+	resp, err := httpc.RequestReturnMap(httpc.GET, url, httpc.FORM, nil, nil)
 	if err != nil {
 		return "", err
 	}

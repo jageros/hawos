@@ -36,7 +36,7 @@ func SendMsg(text string) error {
 		},
 	}
 	resp := new(result)
-	err := httpc.Request2(httpc.POST, url, httpc.JSON, arg, nil, resp)
+	err := httpc.RequestWithInterface(httpc.POST, url, httpc.JSON, arg, nil, resp)
 	if err != nil {
 		return err
 	}
