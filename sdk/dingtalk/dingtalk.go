@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	secret_   = "SECff53e03a11a5754e3773d7d090c6ac999802c9d559ea743ee93e1ba21daac89e"
-	robotUrl_ = "https://oapi.dingtalk.com/robot/send?access_token=e0c7fff08fb219ab9d8c626c89cf9db6cad36df1c233bab3208561328e3259d3"
+	secret_   = "SECff53e03a11a5754e3773d7d0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	robotUrl_ = "https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 )
 
-func UpdateConfig(secret, robotUrl string) {
+func SetConfig(secret, robotUrl string) {
 	secret_ = secret
 	robotUrl_ = robotUrl
 }

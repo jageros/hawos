@@ -16,12 +16,39 @@ import (
 	"fmt"
 	"github.com/jageros/hawox/errcode"
 	"github.com/jageros/hawox/httpc"
+	"sync"
 )
 
 var (
 	baseUrl = "http://api.tianapi.com/jiejiari/index"
-	key     = "26feed49ca7ba5c62adc63ad08e96f3f"
+	key_    = "xxx"
+
+	cache   map[string]IDateType
+	cacheMx sync.RWMutex
 )
+
+func init() {
+	cache = map[string]IDateType{}
+}
+
+func getCache(date string) IDateType {
+	cacheMx.RLock()
+	defer cacheMx.RUnlock()
+	if id, ok := cache[date]; ok {
+		return id
+	}
+	return nil
+}
+
+func setCache(date string, id IDateType) {
+	cacheMx.Lock()
+	defer cacheMx.Unlock()
+	cache[date] = id
+}
+
+func SetKey(key string) {
+	key_ = key
+}
 
 type IDateType interface {
 	Type() DateType
@@ -124,7 +151,11 @@ type dateMsg struct {
 }
 
 func CheckDateType(date string) (IDateType, error) {
-	url := fmt.Sprintf("%s?key=%s&date=%s", baseUrl, key, date)
+	id := getCache(date)
+	if id != nil {
+		return id, nil
+	}
+	url := fmt.Sprintf("%s?key=%s&date=%s", baseUrl, key_, date)
 	var result = new(dateMsg)
 	err := httpc.RequestWithInterface(httpc.GET, url, httpc.FORM, nil, nil, result)
 	if err != nil {
@@ -139,8 +170,10 @@ func CheckDateType(date string) (IDateType, error) {
 	dd := result.NewsList[0]
 
 	if dd.Tip == "调休" {
-		return newDate(dd.Tip, dd.Name), nil
+		id = newDate(dd.Tip, dd.Name)
+	} else {
+		id = newDate(dd.Info, dd.Name)
 	}
-
-	return newDate(dd.Info, dd.Name), nil
+	setCache(date, id)
+	return id, nil
 }

@@ -18,7 +18,15 @@ import (
 )
 
 func Test_GetDateType(t *testing.T) {
+	SetKey("xxx")
 	ty, err := CheckDateType("2022-02-05")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(ty.String(), ty.Info())
+	}
+
+	ty, err = CheckDateType("2022-02-05")
 	if err != nil {
 		fmt.Println(err)
 	} else {
