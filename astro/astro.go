@@ -29,6 +29,10 @@ func GetAnimal(date string) string {
 	return s[6:9]
 }
 
+func Lunar(date string) string {
+	return solarlunar.SolarToChineseLuanr(date)
+}
+
 func GetConstellation(date string) string {
 	strs := strings.Split(date, "-")
 	if len(strs) < 3 {
