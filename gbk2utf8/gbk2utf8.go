@@ -18,6 +18,7 @@ import (
 	"golang.org/x/text/transform"
 	"io/ioutil"
 )
+
 func Decode(s []byte) ([]byte, error) {
 	I := bytes.NewReader(s)
 	O := transform.NewReader(I, simplifiedchinese.GBK.NewDecoder())
