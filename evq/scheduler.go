@@ -18,7 +18,7 @@ const (
 
 var (
 	lastEventID = 10
-	mx          = &sync.Mutex{}
+	mx          = sync.Mutex{}
 )
 
 func CreateEventID() int {
