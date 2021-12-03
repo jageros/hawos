@@ -33,6 +33,8 @@ type IErr interface {
 	Error() string
 	ErrMsg() string
 	Code() int32
+	WithErr(err_ error) IErr
+	WithMsg(msg string) IErr
 }
 
 type err struct {
@@ -56,13 +58,13 @@ func (e err) ErrMsg() string {
 }
 
 func (e err) WithErr(err_ error) IErr {
-	e.errMsg = fmt.Sprintf("%s;%s", e.errMsg, err_.Error())
-	return e
+	errMsg := fmt.Sprintf("%s;%s", e.errMsg, err_.Error())
+	return New(e.code, errMsg)
 }
 
 func (e err) WithMsg(msg string) IErr {
-	e.errMsg = fmt.Sprintf("%s;%s", e.errMsg, msg)
-	return e
+	errMsg := fmt.Sprintf("%s;%s", e.errMsg, msg)
+	return New(e.code, errMsg)
 }
 
 // =========
