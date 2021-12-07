@@ -37,7 +37,7 @@ func (a *MapAttr) String() string {
 			sb.WriteString(", ")
 		}
 
-		fmt.Fprintf(&sb, "%#s", k)
+		fmt.Fprintf(&sb, "%s", k)
 		sb.WriteString(": ")
 		switch a := v.(type) {
 		case *MapAttr:
@@ -45,7 +45,7 @@ func (a *MapAttr) String() string {
 		case *ListAttr:
 			sb.WriteString(a.String())
 		default:
-			fmt.Fprintf(&sb, "%#s", v)
+			fmt.Fprintf(&sb, "%s", v)
 		}
 		isFirstField = false
 	}
