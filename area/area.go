@@ -23,12 +23,12 @@ type ICounty interface {
 
 type ICity interface {
 	ICounty
-	GetCounties() []ICounty
+	GetCounties() Counties
 }
 
 type IProvince interface {
 	ICounty
-	GetCities() []ICity
+	GetCities() Cities
 }
 
 type County struct {
@@ -44,14 +44,34 @@ func (a *County) GetName() string {
 	return a.Name
 }
 
+type Counties []ICounty
+
+func (cs Counties) Strings() []string {
+	var result []string
+	for _, c := range cs {
+		result = append(result, c.GetName())
+	}
+	return result
+}
+
 type City struct {
 	County
 	Counties  []*County `json:"children"`
 	iCounties []ICounty
 }
 
-func (c *City) GetCounties() []ICounty {
+func (c *City) GetCounties() Counties {
 	return c.iCounties
+}
+
+type Cities []ICity
+
+func (cs Cities) Strings() []string {
+	var result []string
+	for _, c := range cs {
+		result = append(result, c.GetName())
+	}
+	return result
 }
 
 type Province struct {
@@ -60,12 +80,22 @@ type Province struct {
 	iCities []ICity
 }
 
-func (p *Province) GetCities() []ICity {
+func (p *Province) GetCities() Cities {
 	return p.iCities
 }
 
+type Provinces []IProvince
+
+func (ps Provinces) Strings() []string {
+	var result []string
+	for _, p := range ps {
+		result = append(result, p.GetName())
+	}
+	return result
+}
+
 var provinces []*Province
-var iProvinces []IProvince
+var iProvinces Provinces
 
 func init() {
 	if err := json.Unmarshal([]byte(citystr), &provinces); err != nil {
@@ -82,11 +112,11 @@ func init() {
 	}
 }
 
-func GetProvinces() []IProvince {
+func GetProvinces() Provinces {
 	return iProvinces
 }
 
-func GetCities(province string) []ICity {
+func GetCities(province string) Cities {
 	for _, p := range iProvinces {
 		if p.GetName() == province {
 			return p.GetCities()
@@ -95,7 +125,7 @@ func GetCities(province string) []ICity {
 	return nil
 }
 
-func GetCounties(province, city string) []ICounty {
+func GetCounties(province, city string) Counties {
 	cs := GetCities(province)
 	for _, p := range cs {
 		if p.GetName() == city {
