@@ -18,13 +18,16 @@ import (
 )
 
 func Test_Lunar(t *testing.T) {
-	date := "1993-08-28"
-	nDate := Lunar(date)
-	animal := GetAnimal(date)
-	constellation := GetConstellation(date)
-
-	fmt.Printf("新历日期：%s\n", date)
-	fmt.Printf("农历日期：%s\n", nDate)
-	fmt.Printf("生肖：%s\n", animal)
-	fmt.Printf("星座：%s\n", constellation)
+	//date := "1993-08-28"
+	//nDate := Lunar(date)
+	//animal := GetAnimal(date)
+	//constellation := GetConstellation(date)
+	//
+	//fmt.Printf("新历日期：%s\n", date)
+	//fmt.Printf("农历日期：%s\n", nDate)
+	//fmt.Printf("生肖：%s\n", animal)
+	//fmt.Printf("星座：%s\n", constellation)
+	s := Horoscope(2021)
+	s1 := GetAnimalByYear(2021)
+	fmt.Println(s, s1)
 }
