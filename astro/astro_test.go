@@ -27,7 +27,9 @@ func Test_Lunar(t *testing.T) {
 	//fmt.Printf("农历日期：%s\n", nDate)
 	//fmt.Printf("生肖：%s\n", animal)
 	//fmt.Printf("星座：%s\n", constellation)
-	s := Horoscope(2021)
-	s1 := GetAnimalByYear(2021)
-	fmt.Println(s, s1)
+	//s := Horoscope(2021)
+	//s1 := GetAnimalByYear(2021)
+	fmt.Println(yTianGanDiZhi("1900-08-27"))
 }
+
+// 0000 11010101010  0000
