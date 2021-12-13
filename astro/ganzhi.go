@@ -63,7 +63,7 @@ func newGanZhi(dayTianGan string, hour int) (ganzhi, animal string) {
 		animal = "猪"
 	}
 
-	stg := tianGan[(tianGanNum[dayTianGan]*2+diZhiNum[dizhi]-2)%10]
+	stg := tianGan[(tianGanNum[dayTianGan]*2+diZhiNum[dizhi]-2)%10+1]
 	ganzhi = stg + dizhi
 	return
 }
