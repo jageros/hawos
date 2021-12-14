@@ -89,5 +89,41 @@ package astro
 
 */
 
+func wuXingAttr(word string) string {
+	switch word {
+	case "壬", "癸", "亥", "子":
+		return "水"
+	case "甲", "乙", "寅", "卯":
+		return "木"
+	case "丙", "丁", "巳", "午":
+		return "火"
+	case "庚", "辛", "申", "酉":
+		return "金"
+	case "戊", "己", "辰", "戌", "丑", "未":
+		return "土"
+	default:
+		return ""
+	}
+}
 
+func wuXingAttrs(words []string) []string {
+	var wuxings []string
+	for _, w := range words {
+		wuxings = append(wuxings, wuXingAttr(w))
+	}
+	return wuxings
+}
 
+func missWuXing(wuxings []string) []string {
+	var all = map[string]bool{"金": true, "木": true, "水": true, "火": true, "土": true}
+	var miss []string
+	for _, wx := range wuxings {
+		if all[wx] {
+			delete(all, wx)
+		}
+	}
+	for wx := range all {
+		miss = append(miss, wx)
+	}
+	return miss
+}

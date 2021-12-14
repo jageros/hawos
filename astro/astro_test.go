@@ -18,8 +18,11 @@ import (
 )
 
 func Test_Lunar(t *testing.T) {
-	d := GetDate("1993-08-27")
-	fmt.Println(d.EWString(3))
+	d := GetDate("1996-09-01")
+	for i := 0; i < 24; i++ {
+		fmt.Println(d.NewEightWord(i).EWString())
+	}
+
 	//d2 := GetDate("1996-12-25")
 	//for i := 0; i < 24; i += 2 {
 	//	fmt.Println(d2.LunarMonth+"月"+d2.LunarDay, d2.Animal, d2.Constellation(), d2.EightWords(i))

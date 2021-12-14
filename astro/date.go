@@ -72,10 +72,6 @@ func (d *Date) String() string {
 	return fmt.Sprintf("%s %s %s %s月%s %s%s%s 宜：%v 忌：%v", d.Key(), d.Constellation(), d.Animal, d.LunarMonth, d.LunarDay, d.YearGanZhi, d.MonthGanZhi, d.DayGanZhi, d.Suitable, d.Avoid)
 }
 
-func (d *Date) EWString(hour int) string {
-	return fmt.Sprintf("%s %s %s %s月%s %v", d.Key(), d.Constellation(), d.Animal, d.LunarMonth, d.LunarDay, d.EightWords(hour))
-}
-
 func (d *Date) WeekString() string {
 	switch d.Week {
 	case 1:
@@ -95,19 +91,15 @@ func (d *Date) WeekString() string {
 	}
 }
 
-func (d *Date) EightWord(hour int) string {
-	hGanZhi, _ := newGanZhi(d.DayGanZhi[:3], hour)
-	return fmt.Sprintf("%s%s%s%s", d.YearGanZhi, d.MonthGanZhi, d.DayGanZhi, hGanZhi)
-}
-
-func (d *Date) EightWords(hour int) []string {
-	hGanZhi, _ := newGanZhi(d.DayGanZhi[:3], hour)
-	words := []string{d.YearGanZhi[:3], d.YearGanZhi[3:], d.MonthGanZhi[:3], d.MonthGanZhi[3:], d.DayGanZhi[:3], d.DayGanZhi[3:], hGanZhi[:3], hGanZhi[3:]}
-	return words
-}
-
 func (d *Date) Constellation() string {
 	return GetConstellation(d.Key())
+}
+
+func (d *Date) NewEightWord(hour int) *EightWord {
+	return &EightWord{
+		hour: hour,
+		Date: d,
+	}
 }
 
 func InitFromJsonFile(path string) error {
