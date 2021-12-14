@@ -127,3 +127,20 @@ func missWuXing(wuxings []string) []string {
 	}
 	return miss
 }
+
+func direction(attr string) string {
+	switch attr {
+	case "金":
+		return "西"
+	case "木":
+		return "东"
+	case "水":
+		return "北"
+	case "火":
+		return "南"
+	case "土":
+		return "中"
+	default:
+		return ""
+	}
+}
