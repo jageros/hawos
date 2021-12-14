@@ -18,55 +18,10 @@ import (
 )
 
 func Test_Lunar(t *testing.T) {
-	dateMap, err := ReadFromJsonFile("date.json")
-	if err != nil {
-		t.Error(err)
-		return
-	} else {
-		fmt.Println("=== init successful ===")
-		fmt.Printf("DayCount=%d\n", len(dateMap))
-		fmt.Println(dateMap["1993-08-27"].EightWord(3))
-	}
-
-	//f, err := os.OpenFile("date1.json", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	//if err != nil {
-	//	t.Error(err)
-	//	return
-	//}
-	//defer f.Close()
-	//
-	//for y := 2021; y <= 2021; y++ {
-	//	fmt.Printf("==== %d ====\n", y)
-	//	for m := 1; m <= 1; m++ {
-	//		ds, err := Crawling(y, m)
-	//		if err != nil {
-	//			t.Error(err)
-	//			return
-	//		}
-	//		bty, err := json.Marshal(ds)
-	//		if err != nil {
-	//			t.Error(err)
-	//			return
-	//		}
-	//		_, err = f.WriteString(string(bty) + ",\n")
-	//		//_, err = fmt.Fprintln(buf, string(bty)+",")
-	//		if err != nil {
-	//			t.Error(err)
-	//			return
-	//		}
-	//	}
-	//	//time.Sleep(time.Second * 10)
-	//}
-
-	//ds, err := Crawling(1904, 12)
-	//if err != nil {
-	//	t.Error(err)
-	//}
-	//for _, d := range ds {
-	//	bty, err := json.Marshal(d)
-	//	if err != nil {
-	//		t.Error(err)
-	//	}
-	//	fmt.Println(string(bty) + ",")
+	d := GetDate("1993-08-27")
+	fmt.Println(d.EWString(3))
+	//d2 := GetDate("1996-12-25")
+	//for i := 0; i < 24; i += 2 {
+	//	fmt.Println(d2.LunarMonth+"月"+d2.LunarDay, d2.Animal, d2.Constellation(), d2.EightWords(i))
 	//}
 }

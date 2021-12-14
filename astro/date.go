@@ -15,6 +15,7 @@ package astro
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jageros/hawox/httpc"
 	"github.com/jageros/hawox/logx"
 	"io"
 	"os"
@@ -24,10 +25,14 @@ import (
 var dateMap map[string]*Date
 
 func init() {
-	var err error
-	dateMap, err = ReadFromJsonFile("date.json")
+	err := InitFromJsonFile("date.json")
+	if err != nil {
+		err = InitFromUrl("http://git.hawtech.cn/jager/data/raw/branch/master/date.json")
+	}
 	if err != nil {
 		logx.Errorf("日历初始化失败：%v", err)
+	} else {
+		logx.Infof("1900-2100年黄历数据初始化成功，总天数=%d", len(dateMap))
 	}
 }
 
@@ -64,7 +69,11 @@ func (d *Date) Key() string {
 }
 
 func (d *Date) String() string {
-	return fmt.Sprintf("%s %s %s月%s %s%s%s 宜：%v 忌：%v", d.Key(), d.Animal, d.LunarMonth, d.LunarDay, d.YearGanZhi, d.MonthGanZhi, d.DayGanZhi, d.Suitable, d.Avoid)
+	return fmt.Sprintf("%s %s %s %s月%s %s%s%s 宜：%v 忌：%v", d.Key(), d.Constellation(), d.Animal, d.LunarMonth, d.LunarDay, d.YearGanZhi, d.MonthGanZhi, d.DayGanZhi, d.Suitable, d.Avoid)
+}
+
+func (d *Date) EWString(hour int) string {
+	return fmt.Sprintf("%s %s %s %s月%s %v", d.Key(), d.Constellation(), d.Animal, d.LunarMonth, d.LunarDay, d.EightWords(hour))
 }
 
 func (d *Date) WeekString() string {
@@ -91,27 +100,61 @@ func (d *Date) EightWord(hour int) string {
 	return fmt.Sprintf("%s%s%s%s", d.YearGanZhi, d.MonthGanZhi, d.DayGanZhi, hGanZhi)
 }
 
-//func (d *Date) EightWords(hour, min int) []string {
-//
-//}
+func (d *Date) EightWords(hour int) []string {
+	hGanZhi, _ := newGanZhi(d.DayGanZhi[:3], hour)
+	words := []string{d.YearGanZhi[:3], d.YearGanZhi[3:], d.MonthGanZhi[:3], d.MonthGanZhi[3:], d.DayGanZhi[:3], d.DayGanZhi[3:], hGanZhi[:3], hGanZhi[3:]}
+	return words
+}
 
-func ReadFromJsonFile(path string) (map[string]*Date, error) {
+func (d *Date) Constellation() string {
+	return GetConstellation(d.Key())
+}
+
+func InitFromJsonFile(path string) error {
 	var result = map[string]*Date{}
 	var dates []*Date
 	f, err := os.OpenFile(path, os.O_RDONLY, 0600)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer f.Close()
 	r := io.Reader(f)
 	err = json.NewDecoder(r).Decode(&dates)
+
 	if err != nil {
-		return nil, err
+		return err
 	}
 	for _, d := range dates {
 		result[d.Key()] = d
 	}
-	return result, nil
+	dateMap = result
+	return nil
+}
+
+func InitFromUrl(url string) error {
+	var result = map[string]*Date{}
+	var dates []*Date
+	body, err := httpc.Request(httpc.GET, url, httpc.FORM, nil, nil)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, &dates)
+	if err != nil {
+		return err
+	}
+	for _, d := range dates {
+		result[d.Key()] = d
+	}
+	dateMap = result
+	return nil
+}
+
+// GetDate 根据日期获取黄历数据，参数date格式： 2006-01-02
+func GetDate(date string) *Date {
+	if d, ok := dateMap[date]; ok {
+		return d
+	}
+	return nil
 }
 
 //var (
