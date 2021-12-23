@@ -18,10 +18,6 @@ import (
 )
 
 func Test_CheckWord(t *testing.T) {
-	ds := CheckWord("梁")
-	fmt.Println(len(ds))
-	ds = CheckWord("焕")
-	fmt.Println(len(ds))
-	ds = CheckWord("刲")
-	fmt.Println(ds[0].GetMore(), ds[1].GetMore())
+	ds := CheckWord("戈")
+	fmt.Println(ds[0].GetRadicals())
 }
