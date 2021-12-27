@@ -51,9 +51,6 @@ func (e err) Code() int32 {
 }
 
 func (e err) ErrMsg() string {
-	if e.errMsg == "" {
-		return "UnknownErrcode"
-	}
 	return e.errMsg
 }
 
@@ -65,6 +62,10 @@ func (e err) WithErr(err_ error) IErr {
 func (e err) WithMsg(msg string) IErr {
 	errMsg := fmt.Sprintf("%s;%s", e.errMsg, msg)
 	return New(e.code, errMsg)
+}
+
+func (e err) Equal(err IErr) bool {
+	return e.Code() == err.Code() && e.ErrMsg() == e.ErrMsg()
 }
 
 // =========
