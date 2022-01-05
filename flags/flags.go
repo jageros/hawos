@@ -30,6 +30,7 @@ import (
 
 var (
 	Options *Option // 全局存储
+	v       *viper.Viper
 )
 
 // 命令行启动参数和配置文件统一的key，避免多次书写出错，命令行中直接使用即可，配置文件中，点隔开代表分级
@@ -340,7 +341,7 @@ func Parse(name string, opts ...func(*Option)) (ctx contextx.Context, wait func(
 
 	pflag.Parse()
 
-	v := viper.New()
+	v = viper.New()
 	err := v.BindPFlags(pflag.CommandLine) // 绑定命令行参数
 	if err != nil {
 		log.Fatalf("v.BindPFlags err: %v", err)
@@ -460,4 +461,12 @@ func AttributeConfigOpf(opt *attribute.Option) {
 	opt.DBName = Options.MongoDB
 	opt.User = Options.MongoUser
 	opt.Password = Options.MongoPwd
+}
+
+func GetValStr(key string) string {
+	return v.GetString(key)
+}
+
+func GetVal(key string) interface{} {
+	return v.Get(key)
 }
