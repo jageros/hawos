@@ -240,7 +240,7 @@ func (op *Option) load(v *viper.Viper) {
 			ServiceName: op.AppName,
 			Mode:        "file",
 			Level:       "info",
-			Path:        op.LogDir,
+			Path:        op.LogDir + "/stat",
 			KeepDays:    7,
 		})
 	} else {
