@@ -111,8 +111,13 @@ func SetRequest() Option {
 	})
 }
 
-func DisableStat() {
+func DisableZeroLog() {
+	logx.Disable()
 	logx.DisableStat()
+}
+
+func SetupZeroLog(c logx.LogConf) {
+	logx.MustSetup(c)
 }
 
 func SetFileOut(dir string, appName string) Option {
@@ -122,13 +127,7 @@ func SetFileOut(dir string, appName string) Option {
 	} else {
 		path = fmt.Sprintf("%s/%s.log", dir, appName)
 	}
-	logx.SetUp(logx.LogConf{
-		ServiceName: appName,
-		Mode:        "file",
-		Level:       "info",
-		Path:        path,
-		KeepDays:    7,
-	})
+
 	return logOptionFunc(func(log *Log) {
 		log.adapters[FileTypeRequest].setFileOut(fmt.Sprintf("%s.request", path))
 		log.adapters[FileTypeLog].setFileOut(path)

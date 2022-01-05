@@ -21,6 +21,7 @@ import (
 	"github.com/jageros/hawox/redis"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	logx2 "github.com/tal-tech/go-zero/core/logx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
 	"strconv"
@@ -161,49 +162,49 @@ func defaultOption() *Option {
 // load 从viper中获取解析出来的参数初始化option中的字段
 func (op *Option) load(v *viper.Viper) {
 	//server
-	Options.ID = v.GetInt(keyId)
-	Options.Mode = v.GetString(keyMode)
+	op.ID = v.GetInt(keyId)
+	op.Mode = v.GetString(keyMode)
 	//log
-	Options.LogDir = v.GetString(keyLogDir)
-	Options.LogCaller = v.GetBool(keyLogCaller)
-	Options.LogRequest = v.GetBool(keyLogRequest)
-	Options.LogStat = v.GetBool(keyLogStat)
+	op.LogDir = v.GetString(keyLogDir)
+	op.LogCaller = v.GetBool(keyLogCaller)
+	op.LogRequest = v.GetBool(keyLogRequest)
+	op.LogStat = v.GetBool(keyLogStat)
 	//http
-	Options.HttpIp = v.GetString(keyHttpIp)
-	Options.HttpPort = v.GetInt(keyHttpPort)
+	op.HttpIp = v.GetString(keyHttpIp)
+	op.HttpPort = v.GetInt(keyHttpPort)
 	//rpc
-	Options.RpcIp = v.GetString(keyRpcIp)
-	Options.RpcPort = v.GetInt(keyRpcPort)
+	op.RpcIp = v.GetString(keyRpcIp)
+	op.RpcPort = v.GetInt(keyRpcPort)
 	//mysql
-	Options.MysqlAddr = v.GetString(keyMysqlAddr)
-	Options.MysqlUser = v.GetString(keyMysqlUser)
-	Options.MysqlPwd = v.GetString(keyMysqlPwd)
-	Options.MysqlDB = v.GetString(keyMysqlDB)
+	op.MysqlAddr = v.GetString(keyMysqlAddr)
+	op.MysqlUser = v.GetString(keyMysqlUser)
+	op.MysqlPwd = v.GetString(keyMysqlPwd)
+	op.MysqlDB = v.GetString(keyMysqlDB)
 	//mongo
-	Options.MongoAddr = v.GetString(keyMongoAddr)
-	Options.MongoUser = v.GetString(keyMongoUser)
-	Options.MongoPwd = v.GetString(keyMongoPwd)
-	Options.MongoDB = v.GetString(keyMongoDB)
+	op.MongoAddr = v.GetString(keyMongoAddr)
+	op.MongoUser = v.GetString(keyMongoUser)
+	op.MongoPwd = v.GetString(keyMongoPwd)
+	op.MongoDB = v.GetString(keyMongoDB)
 	//etcd
-	Options.EtcdAddrs = v.GetString(keyEtcdAddr)
-	Options.EtcdUser = v.GetString(keyEtcdUser)
-	Options.EtcdPasswd = v.GetString(keyEtcdPassword)
+	op.EtcdAddrs = v.GetString(keyEtcdAddr)
+	op.EtcdUser = v.GetString(keyEtcdUser)
+	op.EtcdPasswd = v.GetString(keyEtcdPassword)
 	//redis
-	Options.RedisAddrs = v.GetString(keyRedisAddr)
-	Options.RedisUser = v.GetString(keyRedisUser)
-	Options.RedisPasswd = v.GetString(keyRedisPassword)
+	op.RedisAddrs = v.GetString(keyRedisAddr)
+	op.RedisUser = v.GetString(keyRedisUser)
+	op.RedisPasswd = v.GetString(keyRedisPassword)
 	//queue
-	Options.QueueType = v.GetString(keyQueueType)
-	Options.QueueAddrs = v.GetString(keyQueueAddr)
+	op.QueueType = v.GetString(keyQueueType)
+	op.QueueAddrs = v.GetString(keyQueueAddr)
 	//frontend
-	Options.FrontendAddr = v.GetString(keyFrontendAddr)
-	if Options.FrontendAddr == "" {
-		Options.FrontendAddr = fmt.Sprintf("127.0.0.1:%d", Options.HttpPort)
+	op.FrontendAddr = v.GetString(keyFrontendAddr)
+	if op.FrontendAddr == "" {
+		op.FrontendAddr = fmt.Sprintf("127.0.0.1:%d", op.HttpPort)
 	}
 
 	// 根据配置中的mode设置log的等级
 	var logLevel string
-	switch Options.Mode {
+	switch op.Mode {
 	case "release":
 		logLevel = logx.InfoLevel
 	case "info":
@@ -220,22 +221,30 @@ func (op *Option) load(v *viper.Viper) {
 
 	// 配置日志
 	var logOpfs []logx.Option
-	if Options.LogCaller {
+	if op.LogCaller {
 		logOpfs = append(logOpfs, logx.SetCaller())
 	}
-	if Options.LogRequest {
+	if op.LogRequest {
 		logOpfs = append(logOpfs, logx.SetRequest())
 	}
 	source := Source()
 	if source != "" {
 		logOpfs = append(logOpfs, logx.SetSource(source))
 	}
-	if Options.LogDir != "" {
-		logOpfs = append(logOpfs, logx.SetFileOut(Options.LogDir, Options.AppName))
+	if op.LogDir != "" {
+		logOpfs = append(logOpfs, logx.SetFileOut(op.LogDir, op.AppName))
 	}
 
-	if !Options.LogStat {
-		logx.DisableStat()
+	if op.LogStat {
+		logx.SetupZeroLog(logx2.LogConf{
+			ServiceName: op.AppName,
+			Mode:        "file",
+			Level:       "info",
+			Path:        op.LogDir,
+			KeepDays:    7,
+		})
+	} else {
+		logx.DisableZeroLog()
 	}
 
 	// 初始化日志
