@@ -24,9 +24,6 @@ var (
 	wm map[string][]IDict
 )
 
-func init() {
-	InitFromJsonFile("word.json")
-}
 
 type IDict interface {
 	GetWord() string
