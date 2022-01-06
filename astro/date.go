@@ -24,9 +24,10 @@ import (
 
 var dateMap map[string]*Date
 
-func init() {
+func initDateMap() {
 	err := InitFromJsonFile("date.json")
 	if err != nil {
+		logx.Infof("正在从网络文件【http://git.hawtech.cn/jager/data/raw/branch/master/date.json】初始化黄历数据。。。")
 		err = InitFromUrl("http://git.hawtech.cn/jager/data/raw/branch/master/date.json")
 	}
 	if err != nil {
@@ -161,6 +162,9 @@ func InitFromUrl(url string) error {
 
 // GetDate 根据日期获取黄历数据，参数date格式： 2006-01-02
 func GetDate(date string) *Date {
+	if dateMap == nil {
+		initDateMap()
+	}
 	if d, ok := dateMap[date]; ok {
 		return d
 	}
