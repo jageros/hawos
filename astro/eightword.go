@@ -30,6 +30,11 @@ func (ew *EightWord) Words() []string {
 	return words
 }
 
+func (ew *EightWord) HourGanZhi() string {
+	hGanZhi, _ := newGanZhi(ew.DayGanZhi[:3], ew.hour)
+	return hGanZhi
+}
+
 func (ew *EightWord) WuXingAttr() []string {
 	return wuXingAttrs(ew.Words())
 }

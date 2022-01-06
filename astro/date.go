@@ -72,6 +72,24 @@ func (d *Date) String() string {
 	return fmt.Sprintf("%s %s %s %s月%s %s%s%s 宜：%v 忌：%v", d.Key(), d.Constellation(), d.Animal, d.LunarMonth, d.LunarDay, d.YearGanZhi, d.MonthGanZhi, d.DayGanZhi, d.Suitable, d.Avoid)
 }
 
+func (d *Date) Map(hour int) (map[string]interface{}, error) {
+	var resp = map[string]interface{}{}
+	data, err := json.Marshal(d)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if hour < 0 {
+		resp["time_gan_zhi"] = "未知"
+	} else {
+		resp["time_gan_zhi"] = d.NewEightWord(hour).HourGanZhi()
+	}
+	return resp, nil
+}
+
 func (d *Date) WeekString() string {
 	switch d.Week {
 	case 1:
