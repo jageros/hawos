@@ -18,12 +18,9 @@ import (
 )
 
 func Test_Areas(t *testing.T) {
-	ps := GetProvinces()
-	fmt.Printf("省份列表：%v\n\n", ps.Strings())
-
-	cs := GetCities("广东省")
-	fmt.Printf("广东省城市列表：%v\n\n", cs.Strings())
-
 	as := GetCounties("广东省", "广州市")
-	fmt.Printf("广东省广州市区列表：%v\n\n", as.Strings())
+	for _, a := range as {
+		fmt.Println(a.GetName(), a.GetCode())
+	}
+	//fmt.Printf("广东省广州市区列表：%v\n\n", as.Strings())
 }

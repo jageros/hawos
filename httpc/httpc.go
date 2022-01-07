@@ -88,7 +88,7 @@ func RequestWithInterface(method METHOD, url string, contentType string, arg map
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(body, &result)
+	return json.Unmarshal(body, result)
 }
 
 func RequestReturnMap(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string) (result map[string]interface{}, err error) {

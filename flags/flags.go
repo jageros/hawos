@@ -463,8 +463,12 @@ func AttributeConfigOpf(opt *attribute.Option) {
 	opt.Password = Options.MongoPwd
 }
 
-func GetValStr(key string) string {
+func GetString(key string) string {
 	return v.GetString(key)
+}
+
+func GetStringSlice(key string) []string {
+	return v.GetStringSlice(key)
 }
 
 func GetVal(key string) interface{} {
