@@ -14,16 +14,14 @@ package udpx
 
 import (
 	"net"
-	"net/http"
 	"sync"
 )
 
 type Session struct {
-	Response *http.Response
-	Keys     map[string]interface{}
-	conn     *net.UDPConn
-	output   chan *envelope
-	melody   *Melody
-	open     bool
-	rwMutex  *sync.RWMutex
+	addr    *net.UDPAddr
+	Keys    map[string]interface{}
+	readCh chan *Package
+	writeCh chan *Package
+	open    bool
+	rwMutex *sync.RWMutex
 }

@@ -13,64 +13,78 @@
 package udpx
 
 import (
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/jageros/hawox/contextx"
 	"net"
-	"os"
-	"strings"
+	"strconv"
+	"time"
 )
 
-func Init(ctx contextx.Context, ops ...func(opt *Config)) error {
+type Server struct {
+	ListenIp     string // 监听IP
+	Port         int    // 监听端口
+	Mode         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	CloseTimeout time.Duration
+	MaxPkgSize   int32
+	OnMsgHandle  func(session *Session, data []byte) (resp []byte)
+
+	conn   *net.UDPConn
+	ctx    contextx.Context
+	cancel contextx.CancelFunc
+}
+
+func (s *Server) addr() string {
+	return s.ListenIp + ":" + strconv.Itoa(s.Port)
+}
+
+func defaultServer() *Server {
+	return &Server{
+		ListenIp:     "",
+		Port:         8888,
+		Mode:         gin.DebugMode,
+		ReadTimeout:  time.Second * 10,
+		WriteTimeout: time.Second * 10,
+		CloseTimeout: time.Second * 10,
+		MaxPkgSize:   4096,
+	}
+}
+
+func (s *Server) updateReadTime() error {
+	return s.conn.SetReadDeadline(time.Now().Add(s.ReadTimeout))
+}
+
+func (s *Server) run() {
+	s.ctx.Go(func(ctx contextx.Context) error {
+		for {
+			select {
+			case <-ctx.Done():
+				return s.conn.Close()
+			default:
+
+			}
+		}
+	})
+}
+
+func Init(ctx contextx.Context, ops ...func(opt *Server)) error {
 	s := defaultServer()
 	for _, op := range ops {
 		op(s)
 	}
+	ctx_, cancel := ctx.WithCancel()
+	s.ctx = ctx_
+	s.cancel = cancel
+
 	addr, err := net.ResolveUDPAddr("udp", s.addr())
 	if err != nil {
 		return err
 	}
-	addr.String()
 	s.conn, err = net.ListenUDP("udp", addr)
 	if err != nil {
 		return err
 	}
+	s.run()
 	return nil
-}
-
-func ssss() {
-	addr, err := net.ResolveUDPAddr("udp", address)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	conn, err := net.ListenUDP("udp", addr)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	defer conn.Close()
-
-	for {
-		// Here must use make and give the lenth of buffer
-		data := make([]byte, config.SERVER_RECV_LEN)
-		_, rAddr, err := conn.ReadFromUDP(data)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
-		strData := string(data)
-		fmt.Println("Received:", strData)
-
-		upper := strings.ToUpper(strData)
-		_, err = conn.WriteToUDP([]byte(upper), rAddr)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
-		fmt.Println("Send:", upper)
-	}
 }
