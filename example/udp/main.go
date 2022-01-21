@@ -1,0 +1,37 @@
+/**
+ * @Author:  jager
+ * @Email:   lhj168os@gmail.com
+ * @File:    main
+ * @Date:    2022/1/21 2:44 下午
+ * @package: udp
+ * @Version: v1.0.0
+ *
+ * @Description:
+ *
+ */
+
+package main
+
+import (
+	"github.com/jageros/hawox/flags"
+	"github.com/jageros/hawox/logx"
+	"github.com/jageros/hawox/udpx"
+	"net"
+)
+
+func main() {
+	const appName = "udp-demo"
+	ctx, wait := flags.Parse(appName)
+	defer wait()
+
+	err := udpx.Init(ctx, func(opt *udpx.Option) {
+		opt.OnBinaryHandle = onBinaryMsgMsg
+	})
+	if err != nil {
+		logx.Fatalf("udp init err: %v", err)
+	}
+}
+
+func onBinaryMsgMsg(addr *net.UDPAddr, data []byte) []byte {
+
+}

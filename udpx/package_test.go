@@ -40,8 +40,12 @@ func TestUdpx(t *testing.T) {
 		Payload: data,
 	}
 
+	ddd := make([]byte, 4096)
+
+	copy(ddd, arg.Marshal())
+
 	arg2 := &Package{}
-	arg2.UnMarshal(arg.Marshal())
+	arg2.UnMarshal(ddd)
 
 	data2 := &Server2{}
 	err = json.Unmarshal(arg2.Payload, data2)
