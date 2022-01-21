@@ -17,6 +17,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
+	"github.com/jageros/hawox/utils"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	logx2 "github.com/tal-tech/go-zero/core/logx"
@@ -30,14 +31,10 @@ var (
 	v       *viper.Viper
 )
 
-type ArgType int8
-
-const (
-	String  ArgType = 0
-	Int     ArgType = 1
-	Float64 ArgType = 2
-	Bool    ArgType = 3
-)
+type ValInfo struct {
+	Val         interface{}
+	Description string
+}
 
 // 命令行启动参数和配置文件统一的key，避免多次书写出错，命令行中直接使用即可，配置文件中，点隔开代表分级
 var (
@@ -62,13 +59,14 @@ type Option struct {
 	Configfile string // 配置文件路径
 
 	// log配置
+	UseLogx    bool   // 使用logx
 	LogDir     string // log目录
 	LogCaller  bool   // 是否开启记录输出日志的代码文件行号
 	LogRequest bool   // 是否开启http请求的日志记录
 	LogStat    bool   // 是否开启系统状态日志输出
 
 	// other conf
-	Keys map[string]ArgType
+	Keys map[string]*ValInfo
 
 	OnReload func()
 }
@@ -106,6 +104,9 @@ func (op *Option) load(v *viper.Viper) {
 	op.LogStat = v.GetBool(keyLogStat)
 
 	// 根据配置中的mode设置log的等级
+	if !op.UseLogx {
+		return
+	}
 	var logLevel string
 	switch op.Mode {
 	case "release":
@@ -178,17 +179,29 @@ func Parse(name string, opts ...func(*Option)) (ctx contextx.Context, wait func(
 	pflag.Bool(keyLogStat, Options.LogStat, "log stat")
 
 	// other
-	for key, ty := range Options.Keys {
-		switch ty {
-		case String:
-			pflag.String(key, "", key)
-		case Int:
-			pflag.Int(key, 0, key)
-		case Float64:
-			pflag.Float64(key, 0, key)
-		case Bool:
-			pflag.Bool(key, false, key)
-
+	for key, v := range Options.Keys {
+		val := v.Val
+		usage := v.Description
+		if usage == "" {
+			usage = key
+		}
+		switch val.(type) {
+		case string:
+			pflag.String(key, val.(string), usage)
+		case []string:
+			pflag.StringSlice(key, val.([]string), usage)
+		case uint, int, uint8, int8, uint16, int16, uint32, int32, uint64, int64:
+			pflag.Int(key, utils.ToInt(val), usage)
+		case []uint, []int, []uint8, []int8, []uint16, []int16, []uint32, []int32, []uint64, []int64:
+			pflag.IntSlice(key, utils.ToIntSlice(val), usage)
+		case float32, float64:
+			pflag.Float64(key, utils.ToFloat64(val), usage)
+		case []float32, []float64:
+			pflag.Float64Slice(key, utils.ToFloat64Slice(val), usage)
+		case bool:
+			pflag.Bool(key, val.(bool), usage)
+		case []bool:
+			pflag.BoolSlice(key, val.([]bool), usage)
 		}
 	}
 
@@ -243,7 +256,9 @@ func Parse(name string, opts ...func(*Option)) (ctx contextx.Context, wait func(
 			//设置监听回调函数
 			v.OnConfigChange(func(e fsnotify.Event) {
 				if e.Op == fsnotify.Write {
-					logx.Sync() // 重新初始化时先同步
+					if Options.UseLogx {
+						logx.Sync() // 重新初始化时先同步
+					}
 					Options.load(v)
 					if Options.OnReload != nil {
 						Options.OnReload()
@@ -267,8 +282,12 @@ func Parse(name string, opts ...func(*Option)) (ctx contextx.Context, wait func(
 
 	wait = func() {
 		err := ctx.Wait()
-		logx.Infof("Application Stop With: %v", err)
-		logx.Sync()
+		if Options.UseLogx {
+			logx.Infof("Application Stop With: %v", err)
+			logx.Sync()
+		} else {
+			log.Printf("Application Stop With: %v", err)
+		}
 	}
 
 	return
