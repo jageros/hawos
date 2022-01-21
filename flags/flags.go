@@ -157,7 +157,7 @@ func (op *Option) load(v *viper.Viper) {
 }
 
 // Parse 解析配置， 启动参数有传参则忽略配置文件
-func Parse(name string, opts ...func(*Option)) (ctx contextx.Context, wait func()) {
+func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait func()) {
 	Options = defaultOption(name)
 
 	// 调用该接口时可以改变默认值，但优先顺序为 启动参数 > 配置文件 > 接口传参 > 默认值

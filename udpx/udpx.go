@@ -60,12 +60,12 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 		}
 		ctx.Go(func(ctx contextx.Context) error {
 			<-ctx.Done()
-			return conn.SetDeadline(time.Now())
+			return conn.Close()
 		})
 		for {
 			select {
 			case <-ctx.Done():
-				return conn.Close()
+				return ctx.Err()
 			default:
 
 				data := make([]byte, s.MaxPkgSize)
@@ -110,3 +110,4 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 
 	return nil
 }
+
