@@ -89,3 +89,7 @@ func OnRespMsgHandle(addr *net.UDPAddr, h RespHandle) {
 func OnGlobalRespHandle(h GlobalRespHandle) {
 	globalHandle = h
 }
+
+func LocalAddr() net.Addr {
+	return conn.LocalAddr()
+}
