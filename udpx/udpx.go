@@ -91,7 +91,7 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 
 				if len(resp) > 0 {
 					rPkg := &Package{
-						Type:    BinaryMessage,
+						Type:    pkg.Type,
 						Payload: resp,
 					}
 					err = conn.SetWriteDeadline(time.Now().Add(s.WriteTimeout))
@@ -110,4 +110,3 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 
 	return nil
 }
-

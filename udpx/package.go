@@ -14,6 +14,7 @@ package udpx
 
 import (
 	"encoding/binary"
+	"sync"
 )
 
 type MsgType int8
@@ -26,6 +27,11 @@ const (
 type Package struct {
 	Type    MsgType
 	Payload []byte
+}
+
+func (p *Package) clear() {
+	p.Type = 0
+	p.Payload = nil
 }
 
 func (p *Package) Marshal() []byte {
@@ -52,4 +58,26 @@ func (p *Package) Unmarshal(body []byte) {
 		p.Payload = make([]byte, payloadLen)
 		copy(p.Payload, body[5:])
 	}
+}
+
+// ====== pool ======
+
+var pool *sync.Pool
+
+func init() {
+	pool = &sync.Pool{
+		New: func() interface{} {
+			return &Package{}
+		},
+	}
+}
+
+func GetPackage() *Package {
+	pkg := pool.Get().(*Package)
+	return pkg
+}
+
+func PutPackage(pkg *Package) {
+	pkg.clear()
+	pool.Put(pkg)
 }
