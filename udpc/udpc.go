@@ -13,83 +13,108 @@
 package udpc
 
 import (
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/errcode"
 	"github.com/jageros/hawox/logx"
 	"github.com/jageros/hawox/udpx"
 	"net"
-	"sync"
+	"time"
 )
-
-var (
-	maxPkgRead   = 4096
-	conn         *net.UDPConn
-	handles      map[string]RespHandle
-	globalHandle GlobalRespHandle
-	rwMux        sync.RWMutex
-)
-
-func SetMaxPkgRead(n int) {
-	maxPkgRead = n
-}
 
 type RespHandle func(msgType udpx.MsgType, data []byte)
-type GlobalRespHandle func(addr *net.UDPAddr, msgType udpx.MsgType, data []byte)
 
-func init() {
-	var err error
-	conn, err = net.ListenUDP("udp", &net.UDPAddr{})
-	if err != nil {
-		logx.Fatalf("udp client init err: %v", err)
-	}
-	handles = map[string]RespHandle{}
-	go onMsg()
+type ClientOption struct {
+	MaxPkgSize   int
+	WriteTimeout time.Duration
+	OnMsgHandle  RespHandle
+	SrcAddr      *net.UDPAddr
+	TargetAddr   *net.UDPAddr
 }
 
-func onMsg() {
-	for {
-		data := make([]byte, maxPkgRead)
-		_, addr, err := conn.ReadFromUDP(data)
-		if err == nil {
-			pkg := udpx.GetPackage()
-			pkg.Unmarshal(data)
-			rwMux.RLock()
-			h, ok := handles[addr.String()]
-			rwMux.RUnlock()
-			if ok {
-				h(pkg.Type, pkg.Payload)
+type Client struct {
+	opt    *ClientOption
+	conn   *net.UDPConn
+	cancel contextx.CancelFunc
+}
+
+func New(ctx contextx.Context, opfs ...func(opt *ClientOption)) (*Client, error) {
+	opt := &ClientOption{
+		MaxPkgSize:   4096,
+		WriteTimeout: time.Second * 5,
+		OnMsgHandle: func(msgType udpx.MsgType, data []byte) {
+			if msgType == udpx.TextMessage {
+				logx.Infof("RespMsg=%s", string(data))
+			} else {
+				logx.Infof("RespMsg is binary.")
 			}
-			if globalHandle != nil {
-				globalHandle(addr, pkg.Type, pkg.Payload)
+		},
+		SrcAddr: &net.UDPAddr{IP: net.IPv4zero, Port: 59055},
+	}
+
+	for _, opf := range opfs {
+		opf(opt)
+	}
+	if opt.TargetAddr == nil {
+		return nil, errcode.New(1, "Target Addr is nil")
+	}
+	conn, err := net.DialUDP("udp", opt.SrcAddr, opt.TargetAddr)
+	if err != nil {
+		return nil, err
+	}
+	ctx_, cancel := ctx.WithCancel()
+	ctx.Go(func(ctx contextx.Context) error {
+		<-ctx.Done()
+		return conn.Close()
+	})
+	ctx_.Go(func(ctx contextx.Context) error {
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+				data := make([]byte, maxPkgRead)
+				_, _, err = conn.ReadFromUDP(data)
+				if err != nil {
+					return err
+				}
+				pkg := udpx.GetPackage()
+				pkg.Unmarshal(data)
+				opt.OnMsgHandle(pkg.Type, pkg.Payload)
 			}
 		}
+	})
+	c := &Client{
+		opt:    opt,
+		conn:   conn,
+		cancel: cancel,
 	}
+	return c, nil
 }
 
-func SendTextMsg(addr *net.UDPAddr, data []byte) error {
+func (c *Client) SendTextMsg(data []byte) error {
 	pkg := udpx.GetPackage()
 	pkg.Type = udpx.TextMessage
 	pkg.Payload = data
-	_, err := conn.WriteToUDP(pkg.Marshal(), addr)
+	err := c.conn.SetWriteDeadline(time.Now().Add(c.opt.WriteTimeout))
+	if err != nil {
+		return err
+	}
+	_, err = c.conn.Write(pkg.Marshal())
 	return err
 }
 
-func SendBinaryMsg(addr *net.UDPAddr, data []byte) error {
+func (c *Client) SendBinaryMsg(data []byte) error {
 	pkg := udpx.GetPackage()
 	pkg.Type = udpx.BinaryMessage
 	pkg.Payload = data
-	_, err := conn.WriteToUDP(pkg.Marshal(), addr)
+	err := c.conn.SetWriteDeadline(time.Now().Add(c.opt.WriteTimeout))
+	if err != nil {
+		return err
+	}
+	_, err = c.conn.Write(pkg.Marshal())
 	return err
 }
 
-func OnRespMsgHandle(addr *net.UDPAddr, h RespHandle) {
-	rwMux.Lock()
-	handles[addr.String()] = h
-	rwMux.Unlock()
-}
-
-func OnGlobalRespHandle(h GlobalRespHandle) {
-	globalHandle = h
-}
-
-func LocalAddr() net.Addr {
-	return conn.LocalAddr()
+func (c *Client) Close() {
+	c.cancel()
 }

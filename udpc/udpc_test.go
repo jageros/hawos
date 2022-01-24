@@ -24,40 +24,21 @@ func TestReq(t *testing.T) {
 	ctx, cancel := contextx.Default()
 	defer cancel()
 	addr := &net.UDPAddr{IP: net.IPv4(119, 29, 105, 154), Port: 9055}
-	OnRespMsgHandle(addr, func(msgType udpx.MsgType, data []byte) {
-		fmt.Println(string(data))
-	})
-	addr2 := &net.UDPAddr{IP: net.IPv4(119, 29, 105, 154), Port: 9066}
-	OnRespMsgHandle(addr2, func(msgType udpx.MsgType, data []byte) {
-		fmt.Println(string(data))
-	})
-	OnGlobalRespHandle(func(addr *net.UDPAddr, msgType udpx.MsgType, data []byte) {
-		fmt.Println(addr.String(), string(data))
-	})
-	ctx.Go(func(ctx contextx.Context) error {
-		for i := 0; i < 100000; i++ {
-			err := SendTextMsg(addr, []byte(fmt.Sprintf("Num=%d", i)))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	ctx.Go(func(ctx contextx.Context) error {
-		for i := 100001; i < 200000; i++ {
-			err := SendTextMsg(addr2, []byte(fmt.Sprintf("Num=%d", i)))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 
-	ctx.Go(func(ctx contextx.Context) error {
-		<-ctx.Done()
-		return nil
+	c, err := New(ctx, func(opt *ClientOption) {
+		opt.TargetAddr = addr
+		//opt.OnMsgHandle = onMsgHandle
 	})
-
-	err := ctx.Wait()
+	if err != nil {
+		t.Error(err)
+	}
+	err = c.SendTextMsg([]byte("xxxxxxxxx"))
+	if err != nil {
+		t.Error(err)
+	}
+	err = ctx.Wait()
 	fmt.Printf("stop: %v", err)
+}
+
+func onMsgHandle(msgType udpx.MsgType, data []byte) {
 }

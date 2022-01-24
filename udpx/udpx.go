@@ -58,6 +58,7 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 		if err != nil {
 			return err
 		}
+		logx.Infof("UDP listen addr=%s", addr.String())
 		ctx.Go(func(ctx contextx.Context) error {
 			<-ctx.Done()
 			return conn.Close()
