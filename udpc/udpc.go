@@ -20,10 +20,11 @@ import (
 )
 
 var (
-	maxPkgRead = 4096
-	conn       *net.UDPConn
-	handles    map[string]RespHandle
-	rwMux      sync.RWMutex
+	maxPkgRead   = 4096
+	conn         *net.UDPConn
+	handles      map[string]RespHandle
+	globalHandle GlobalRespHandle
+	rwMux        sync.RWMutex
 )
 
 func SetMaxPkgRead(n int) {
@@ -31,6 +32,7 @@ func SetMaxPkgRead(n int) {
 }
 
 type RespHandle func(msgType udpx.MsgType, data []byte)
+type GlobalRespHandle func(addr *net.UDPAddr, msgType udpx.MsgType, data []byte)
 
 func init() {
 	var err error
@@ -47,13 +49,16 @@ func onMsg() {
 		data := make([]byte, maxPkgRead)
 		_, addr, err := conn.ReadFromUDP(data)
 		if err == nil {
+			pkg := udpx.GetPackage()
+			pkg.Unmarshal(data)
 			rwMux.RLock()
 			h, ok := handles[addr.String()]
 			rwMux.RUnlock()
 			if ok {
-				pkg := udpx.GetPackage()
-				pkg.Unmarshal(data)
 				h(pkg.Type, pkg.Payload)
+			}
+			if globalHandle != nil {
+				globalHandle(addr, pkg.Type, pkg.Payload)
 			}
 		}
 	}
@@ -79,4 +84,8 @@ func OnRespMsgHandle(addr *net.UDPAddr, h RespHandle) {
 	rwMux.Lock()
 	handles[addr.String()] = h
 	rwMux.Unlock()
+}
+
+func OnGlobalRespHandle(h GlobalRespHandle) {
+	globalHandle = h
 }

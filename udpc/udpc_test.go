@@ -31,9 +31,12 @@ func TestReq(t *testing.T) {
 	OnRespMsgHandle(addr2, func(msgType udpx.MsgType, data []byte) {
 		fmt.Println(string(data))
 	})
+	OnGlobalRespHandle(func(addr *net.UDPAddr, msgType udpx.MsgType, data []byte) {
+		fmt.Println(addr.String(), string(data))
+	})
 	ctx.Go(func(ctx contextx.Context) error {
 		for i := 0; i < 100000; i++ {
-			err := SendTextMsg(addr, []byte(fmt.Sprintf("SendNum=%d", i)))
+			err := SendTextMsg(addr, []byte(fmt.Sprintf("Num=%d", i)))
 			if err != nil {
 				return err
 			}
@@ -42,7 +45,7 @@ func TestReq(t *testing.T) {
 	})
 	ctx.Go(func(ctx contextx.Context) error {
 		for i := 100001; i < 200000; i++ {
-			err := SendTextMsg(addr2, []byte(fmt.Sprintf("SendNum=%d", i)))
+			err := SendTextMsg(addr2, []byte(fmt.Sprintf("Num=%d", i)))
 			if err != nil {
 				return err
 			}
