@@ -20,13 +20,41 @@ import (
 	"time"
 )
 
+var msgCh = make(chan *msg, 1024)
+
+type msg struct {
+	rAddr *net.UDPAddr
+	data  []byte
+}
+
+func send(rAddr *net.UDPAddr, msgType MsgType, data []byte) {
+	pkg := GetPackage()
+	pkg.Type = msgType
+	pkg.Payload = data
+	msgCh <- &msg{
+		rAddr: rAddr,
+		data:  pkg.Marshal(),
+	}
+	PutPackage(pkg)
+}
+
+func SendTextMsg(rAddr *net.UDPAddr, data []byte) {
+	send(rAddr, TextMessage, data)
+}
+
+func SendBinaryMsg(rAddr *net.UDPAddr, data []byte) {
+	send(rAddr, BinaryMessage, data)
+}
+
+// ================
+
 type Option struct {
 	ListenIp       string // 监听IP
 	Port           int    // 监听端口
 	WriteTimeout   time.Duration
 	MaxPkgSize     int32
-	OnMsgHandle    func(addr *net.UDPAddr, data []byte) (resp []byte)
-	OnBinaryHandle func(addr *net.UDPAddr, data []byte) (resp []byte)
+	OnMsgHandle    func(addr *net.UDPAddr, data []byte)
+	OnBinaryHandle func(addr *net.UDPAddr, data []byte)
 }
 
 func (s *Option) addr() string {
@@ -61,7 +89,29 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 		logx.Infof("UDP listen addr=%s", addr.String())
 		ctx.Go(func(ctx contextx.Context) error {
 			<-ctx.Done()
+			close(msgCh)
 			return conn.Close()
+		})
+		ctx.Go(func(ctx contextx.Context) error {
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				case m := <-msgCh:
+					if m == nil {
+						return nil
+					}
+					err = conn.SetWriteDeadline(time.Now().Add(s.WriteTimeout))
+					if err == nil {
+						_, err = conn.WriteToUDP(m.data, m.rAddr)
+						if err != nil {
+							logx.Infof("conn.WriteToUDP err=%v", err)
+						}
+					} else {
+						logx.Infof("conn.SetWriteDeadline err=%v", err)
+					}
+				}
+			}
 		})
 		for {
 			select {
@@ -78,31 +128,14 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 				pkg := &Package{}
 				pkg.Unmarshal(data)
 
-				var resp []byte
 				switch pkg.Type {
 				case TextMessage:
 					if s.OnMsgHandle != nil {
-						resp = s.OnMsgHandle(rAddr, pkg.Payload)
+						s.OnMsgHandle(rAddr, pkg.Payload)
 					}
 				case BinaryMessage:
 					if s.OnBinaryHandle != nil {
-						resp = s.OnBinaryHandle(rAddr, pkg.Payload)
-					}
-				}
-
-				if len(resp) > 0 {
-					rPkg := &Package{
-						Type:    pkg.Type,
-						Payload: resp,
-					}
-					err = conn.SetWriteDeadline(time.Now().Add(s.WriteTimeout))
-					if err == nil {
-						_, err = conn.WriteToUDP(rPkg.Marshal(), rAddr)
-						if err != nil {
-							logx.Infof("conn.WriteToUDP err=%v", err)
-						}
-					} else {
-						logx.Infof("conn.SetWriteDeadline err=%v", err)
+						s.OnBinaryHandle(rAddr, pkg.Payload)
 					}
 				}
 			}
