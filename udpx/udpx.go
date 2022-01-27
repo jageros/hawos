@@ -95,7 +95,9 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 					if m == nil {
 						return nil
 					}
-					err = conn.SetWriteDeadline(time.Now().Add(s.WriteTimeout))
+					if s.WriteTimeout > 0 {
+						err = conn.SetWriteDeadline(time.Now().Add(s.WriteTimeout))
+					}
 					if err == nil {
 						_, err = conn.WriteToUDP(m.data, m.rAddr)
 						if err != nil {
@@ -116,8 +118,7 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 				data := make([]byte, s.MaxPkgSize)
 				_, rAddr, err := conn.ReadFromUDP(data)
 				if err != nil {
-					logx.Infof("conn.ReadFromUDP err=%v", err)
-					continue
+					return err
 				}
 				pkg := &Package{}
 				pkg.Unmarshal(data)
