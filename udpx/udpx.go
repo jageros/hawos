@@ -16,7 +16,6 @@ import (
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
 	"net"
-	"strconv"
 	"time"
 )
 
@@ -49,22 +48,22 @@ func SendBinaryMsg(rAddr *net.UDPAddr, data []byte) {
 // ================
 
 type Option struct {
-	ListenIp       string // 监听IP
-	Port           int    // 监听端口
+	//ListenIp       string // 监听IP
+	//Port           int    // 监听端口
+	LAddr          *net.UDPAddr
 	WriteTimeout   time.Duration
 	MaxPkgSize     int32
 	OnMsgHandle    func(addr *net.UDPAddr, data []byte)
 	OnBinaryHandle func(addr *net.UDPAddr, data []byte)
 }
 
-func (s *Option) addr() string {
-	return s.ListenIp + ":" + strconv.Itoa(s.Port)
-}
+//func (s *Option) addr() string {
+//	return s.ListenIp + ":" + strconv.Itoa(s.Port)
+//}
 
 func defaultServer() *Option {
 	return &Option{
-		ListenIp:     "",
-		Port:         9055,
+		LAddr:        &net.UDPAddr{IP: net.IPv4zero, Port: 58055},
 		WriteTimeout: time.Second * 10,
 		MaxPkgSize:   4096,
 	}
@@ -76,17 +75,12 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 		op(s)
 	}
 
-	addr, err := net.ResolveUDPAddr("udp", s.addr())
-	if err != nil {
-		return err
-	}
-
 	ctx.Go(func(ctx contextx.Context) error {
-		conn, err := net.ListenUDP("udp", addr)
+		conn, err := net.ListenUDP("udp", s.LAddr)
 		if err != nil {
 			return err
 		}
-		logx.Infof("UDP listen addr=%s", addr.String())
+		logx.Infof("UDP listen addr=%s", s.LAddr.String())
 		ctx.Go(func(ctx contextx.Context) error {
 			<-ctx.Done()
 			close(msgCh)
