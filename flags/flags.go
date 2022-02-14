@@ -20,7 +20,7 @@ import (
 	"github.com/jageros/hawox/utils"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	logx2 "github.com/tal-tech/go-zero/core/logx"
+	logx2 "github.com/zeromicro/go-zero/core/logx"
 	"log"
 	"strconv"
 	"strings"
