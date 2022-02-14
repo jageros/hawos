@@ -105,6 +105,7 @@ func (op *Option) load(v *viper.Viper) {
 
 	// 根据配置中的mode设置log的等级
 	if !op.UseLogx {
+		logx.DisableZeroLog()
 		return
 	}
 	var logLevel string
