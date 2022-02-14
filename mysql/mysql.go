@@ -15,8 +15,8 @@ package mysql
 import (
 	"fmt"
 	"github.com/jageros/hawox/redis"
-	"github.com/tal-tech/go-zero/core/stores/cache"
-	"github.com/tal-tech/go-zero/core/stores/sqlx"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 var opt_ = &Option{

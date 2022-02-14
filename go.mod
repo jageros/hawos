@@ -11,7 +11,6 @@ require (
 	github.com/eapache/queue v1.1.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
-	github.com/gizak/termui/v3 v3.1.0
 	github.com/go-redis/redis/v8 v8.11.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
@@ -20,7 +19,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
-	github.com/tal-tech/go-zero v1.2.1
+	github.com/zeromicro/go-zero v1.3.0
 	github.com/xiaonanln/go-xnsyncutil v0.0.5
 	github.com/xtaci/kcp-go v5.4.20+incompatible
 	go.etcd.io/etcd/client/v3 v3.5.0

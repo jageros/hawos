@@ -23,8 +23,8 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jageros/hawox/logx"
-	"github.com/tal-tech/go-zero/core/stores/cache"
-	zredis "github.com/tal-tech/go-zero/core/stores/redis"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	zredis "github.com/zeromicro/go-zero/core/stores/redis"
 )
 
 var RDB = &Redis{}
