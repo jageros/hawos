@@ -77,7 +77,7 @@ func main() {
 				log.Fatal(err)
 			}
 			lines := strings.Split(string(text), "\n")
-			code, msgid, err := metatemp.GenMetaFile(*inPkg, *eumName, lines)
+			code, msgid, err := metatemp.GenMetaFile(file.Name(), *inPkg, *eumName, lines)
 			if err != nil {
 				continue
 			}
