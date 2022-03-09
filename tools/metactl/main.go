@@ -15,7 +15,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jageros/hawox/metactl/internal/metatemp"
+	"github.com/jageros/hawox/tools/metactl/internal/metatemp"
 	"io/fs"
 	"io/ioutil"
 	"log"
