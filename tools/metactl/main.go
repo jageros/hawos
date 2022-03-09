@@ -97,7 +97,7 @@ func main() {
 			msgids = append(msgids, msgid...)
 		}
 	}
-	registerFile := metatemp.GenMetaRegister(msgids)
+	registerFile := metatemp.GenMetaRegister(msgids, *inDir)
 	err = writeToFile(registerFile, fmt.Sprintf("%s/meta/meta_register.go", *outDir))
 	if err != nil {
 		log.Fatal(err)
