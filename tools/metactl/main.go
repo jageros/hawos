@@ -15,6 +15,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/jageros/hawox"
 	"github.com/jageros/hawox/tools/metactl/internal/metatemp"
 	"io/fs"
 	"io/ioutil"
@@ -29,10 +30,18 @@ var (
 	outDir  = flag.String("outdir", "protos/", "generate meta go package directory")
 	inPkg   = flag.String("inpkg", "", "proto generate file go package")
 	eumName = flag.String("enum", "MsgID", "msg id enum name")
+	version = flag.Bool("version", false, "show metactl version")
+	v       = flag.Bool("v", false, "show metactl version")
 )
 
-func init() {
+func main() {
 	flag.Parse()
+
+	if *v || *version {
+		fmt.Println(hawox.Version)
+		return
+	}
+
 	if *inPkg == "" {
 		dir, err := os.Getwd()
 		if err != nil {
@@ -45,9 +54,7 @@ func init() {
 			*inPkg = fmt.Sprintf("%s/protos/pb", dir)
 		}
 	}
-}
 
-func main() {
 	start := time.Now()
 	files, err := ioutil.ReadDir(*inDir)
 	if err != nil {
