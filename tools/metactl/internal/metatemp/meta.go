@@ -35,45 +35,75 @@ import (
 	return fmt.Sprintf(head, fileName, sessPkg, pbPkg)
 }
 
+func metaHandle(req, resp string) string {
+	if req == "" || req == "nil" || req == "null" {
+		if resp == "" || resp == "nil" || resp == "null" {
+			return "func(ss sess.ISession) (err error)"
+		} else {
+			return fmt.Sprintf("func(ss sess.ISession) (resp *pb.%s, err error)", resp)
+		}
+	} else if resp == "" || resp == "nil" || resp == "null" {
+		return fmt.Sprintf("func(ss sess.ISession, arg *pb.%s) (err error)", req)
+	} else {
+		return fmt.Sprintf("func(ss sess.ISession, arg *pb.%s) (resp *pb.%s, err error)", req, resp)
+	}
+}
+
+func metaHandleFunc(req, resp string) string {
+	if req == "" || req == "nil" || req == "null" {
+		if resp == "" || resp == "nil" || resp == "null" {
+			return "nil, m.handle(ss)"
+		} else {
+			return "m.handle(ss)"
+		}
+	} else if resp == "" || resp == "nil" || resp == "null" {
+		return fmt.Sprintf("nil, m.handle(ss, arg.(*pb.%s))", req)
+	} else {
+		return fmt.Sprintf("m.handle(ss, arg.(*pb.%s))", req)
+	}
+}
+
 func MetaStruct(note, enum, msgId, req, resp string) string {
+	f := metaHandle(req, resp)
 	metaStruct := `
 %s
 //------------------------------------------------------------------------------------------
 
-var %s = &%s_Meta{}
+var %s = &meta_%s{}
 
 // implement IMeta
 
-type %s_Meta struct {
-	handle func(session sess.ISession, arg *pb.%s) (resp *pb.%s, err error)
+type meta_%s struct {
+	handle %s
 }
 
-func (m *%s_Meta) RegistryHandle(f func(session sess.ISession, arg *pb.%s) (resp *pb.%s, err error)) {
+func (m *meta_%s) RegistryHandle(f %s) {
 	m.handle = f
 }
 
-func (m *%s_Meta) Handle(session sess.ISession, arg interface{}) (interface{}, error) {
-	return m.handle(session, arg.(*pb.%s))
+func (m *meta_%s) Handle(ss sess.ISession, arg interface{}) (interface{}, error) {
+	return %s
 }
 
-func (m *%s_Meta) GetMsgID() pb.%s {
+func (m *meta_%s) GetMsgID() pb.%s {
 	return pb.%s_%s
 }
 `
-	return fmt.Sprintf(metaStruct, note, msgId, msgId, msgId, req, resp, msgId, req, resp, msgId, req, msgId, enum, enum, msgId)
+	handleContent := metaHandleFunc(req, resp)
+	return fmt.Sprintf(metaStruct, note, msgId, msgId, msgId, f, msgId, f, msgId, handleContent, msgId, enum, enum, msgId)
 }
 
 func EncodeArg(msgId, req string) string {
 	if req == "nil" || req == "" || req == "null" {
 		return fmt.Sprintf(`
-func (m *%s_Meta) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_%s) EncodeArg(arg interface{}) ([]byte, error) {
 		return nil, nil
 }
 `, msgId)
 	}
 
 	return fmt.Sprintf(`
-func (m *%s_Meta) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_%s) EncodeArg(arg interface{}) ([]byte, error) {
 	_arg, ok := arg.(*pb.%s)
 	if !ok {
 		p, ok := arg.([]byte)
@@ -81,7 +111,7 @@ func (m *%s_Meta) EncodeArg(arg interface{}) ([]byte, error) {
 			return p, nil
 		}
 
-		return nil, errors.New("%s_Meta EncodeArg error type")
+		return nil, errors.New("%s_meta EncodeArg error type")
 	}
 
 	return _arg.Marshal()
@@ -92,14 +122,14 @@ func (m *%s_Meta) EncodeArg(arg interface{}) ([]byte, error) {
 func DecodeArg(msgId, req string) string {
 	if req == "nil" || req == "" || req == "null" {
 		return fmt.Sprintf(`
-func (m *%s_Meta) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_%s) DecodeArg(data []byte) (interface{}, error) {
 	return nil, nil
 }
 `, msgId)
 	}
 
 	return fmt.Sprintf(`
-func (m *%s_Meta) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_%s) DecodeArg(data []byte) (interface{}, error) {
 	arg := &pb.%s{}
 	if err := arg.Unmarshal(data); err != nil {
 		return nil, err
@@ -113,13 +143,13 @@ func (m *%s_Meta) DecodeArg(data []byte) (interface{}, error) {
 func EncodeReply(msgId, resp string) string {
 	if resp == "" || resp == "nil" || resp == "null" || resp == "ok" {
 		return fmt.Sprintf(`
-func (m *%s_Meta) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_%s) EncodeReply(reply interface{}) ([]byte, error) {
 	return nil, nil
 }
 `, msgId)
 	}
 	return fmt.Sprintf(`
-func (m *%s_Meta) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_%s) EncodeReply(reply interface{}) ([]byte, error) {
 	_reply, ok := reply.(*pb.%s)
 	if !ok {
 		p, ok := reply.([]byte)
@@ -127,7 +157,7 @@ func (m *%s_Meta) EncodeReply(reply interface{}) ([]byte, error) {
 			return p, nil
 		}
 
-		return nil, errors.New("%s_Meta EncodeReply error type")
+		return nil, errors.New("%s_meta EncodeReply error type")
 	}
 
 	return _reply.Marshal()
@@ -138,14 +168,14 @@ func (m *%s_Meta) EncodeReply(reply interface{}) ([]byte, error) {
 func DecodeReply(msgId, resp string) string {
 	if resp == "" || resp == "nil" || resp == "null" || resp == "ok" {
 		return fmt.Sprintf(`
-func (m *%s_Meta) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_%s) DecodeReply(data []byte) (interface{}, error) {
 	return nil, nil
 }
 `, msgId)
 	}
 
 	return fmt.Sprintf(`
-func (m *%s_Meta) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_%s) DecodeReply(data []byte) (interface{}, error) {
 	reply := &pb.%s{}
 	if err := reply.Unmarshal(data); err != nil {
 		return nil, err

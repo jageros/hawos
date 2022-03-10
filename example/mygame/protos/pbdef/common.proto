@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pb;
+
+enum MsgID {
+  UNKNOW_MessageID = 0;
+
+  C2S_FETCH_CONFIG = 100;
+  C2S_PLAYER_LOGIN = 101;
+  C2S_PLAYER_PLAYING = 102;
+  C2S_PLAYER_LOGOUT = 103;
+}
+
+enum MsgType {
+  Req = 0;
+  Reply = 1;
+  Push = 2;
+  Err = 3;
+}
+
+message PkgMsg {
+  MsgType Type = 1;
+  MsgID Msgid = 2;
+  bytes Payload = 3;
+}
+
+message ErrMsg {
+  int32 Code = 1;
+  string Msg = 2;
+}
