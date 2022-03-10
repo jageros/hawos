@@ -45,10 +45,10 @@ var %s = &%s_Meta{}
 // implement IMeta
 
 type %s_Meta struct {
-	handle func(session sess.ISession, msg *pb.%s) (resp *pb.%s, err error)
+	handle func(session sess.ISession, arg *pb.%s) (resp *pb.%s, err error)
 }
 
-func (m *%s_Meta) RegistryHandle(f func(session sess.ISession, msg *pb.%s) (resp *pb.%s, err error)) {
+func (m *%s_Meta) RegistryHandle(f func(session sess.ISession, arg *pb.%s) (resp *pb.%s, err error)) {
 	m.handle = f
 }
 
