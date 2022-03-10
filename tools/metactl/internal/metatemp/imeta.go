@@ -22,7 +22,7 @@ package meta
 import (
 	"errors"
 
-	"%s/meta"
+	"%s"
 
 	pb "%s"
 )

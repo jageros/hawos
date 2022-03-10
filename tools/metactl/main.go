@@ -128,7 +128,7 @@ func main() {
 		}
 	}
 
-	err = writeToFile(metatemp.ISessTemp, sessPath)
+	err = writeToFile(metatemp.ISessTemp+"/sess.go", sessPath)
 	if err != nil {
 		log.Fatal(err)
 	}
