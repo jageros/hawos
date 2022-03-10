@@ -13,5 +13,5 @@
 package hawox
 
 const (
-	Version = "v0.3.5"
+	Version = "v0.3.6"
 )
