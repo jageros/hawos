@@ -51,8 +51,24 @@ func GetMeta(msgId pb.%s) (IMeta, error) {
 		return nil, NoMetaErr
 	}
 }
+
+func Call(session sess.ISession, msgid pb.%s, data []byte) ([]byte, error) {
+	im, err := GetMeta(msgid)
+	if err != nil {
+		return nil, err
+	}
+	arg, err := im.DecodeArg(data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := im.Handle(session, arg)
+	if err != nil {
+		return nil, err
+	}
+	return im.EncodeReply(resp)
+}
 `
 
 func GenIMetaFile(enumName, basePath, inPkg string) string {
-	return fmt.Sprintf(iMeta, basePath, inPkg, enumName, enumName, enumName)
+	return fmt.Sprintf(iMeta, basePath, inPkg, enumName, enumName, enumName, enumName)
 }
