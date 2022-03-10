@@ -26,10 +26,12 @@ import (
 )
 
 var (
+	module  = flag.String("module", "", "project base package path")
 	inDir   = flag.String("indir", "protos/pbdef", "proto file directory")
 	outDir  = flag.String("outdir", "protos/", "generate meta go package directory")
-	inPkg   = flag.String("inpkg", "", "proto generate file go package")
+	pbPkg   = flag.String("pbpkg", "", "proto generate pb file go package")
 	eumName = flag.String("enum", "MsgID", "msg id enum name")
+
 	version = flag.Bool("version", false, "show metactl version")
 	v       = flag.Bool("v", false, "show metactl version")
 )
@@ -42,17 +44,23 @@ func main() {
 		return
 	}
 
-	if *inPkg == "" {
-		dir, err := os.Getwd()
+	if *module == "" {
+		gomod, err := ioutil.ReadFile("go.mod")
 		if err != nil {
-			log.Fatalf("os.Getwd err=%v", err)
+			log.Fatalf("Input module name or exec in go mod project root directory.")
 		}
-		dirs := strings.Split(dir, "src/")
-		if len(dirs) >= 2 {
-			*inPkg = fmt.Sprintf("%s/protos/pb", dirs[1])
-		} else {
-			*inPkg = fmt.Sprintf("%s/protos/pb", dir)
+		strs := strings.Split(string(gomod), "\n")
+		for _, str := range strs {
+			if strings.HasPrefix(str, "module") {
+				ss := strings.Split(str, " ")
+				*module = ss[1]
+				break
+			}
 		}
+	}
+
+	if *pbPkg == "" {
+		*pbPkg = fmt.Sprintf("%s/protos/pb", *module)
 	}
 
 	start := time.Now()
@@ -84,7 +92,7 @@ func main() {
 				log.Fatal(err)
 			}
 			lines := strings.Split(string(text), "\n")
-			code, msgid, err := metatemp.GenMetaFile(file.Name(), *inPkg, *eumName, lines)
+			code, msgid, err := metatemp.GenMetaFile(file.Name(), *pbPkg, *eumName, lines)
 			if err != nil {
 				continue
 			}
@@ -102,10 +110,29 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = writeToFile(metatemp.GenIMetaFile(*eumName, *inPkg), fmt.Sprintf("%s/meta/imeta.go", *outDir))
+	sessPkg := fmt.Sprintf("%s/%s/meta/sess", *module, *outDir)
+	sessPkg = strings.Replace(sessPkg, "//", "/", -1)
+
+	err = writeToFile(metatemp.GenIMetaFile(*eumName, sessPkg, *pbPkg), fmt.Sprintf("%s/meta/imeta.go", *outDir))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	sessPath := fmt.Sprintf("%s/meta/sess", *outDir)
+	sessPath = strings.Replace(sessPath, "//", "/", -1)
+	_, err = os.Stat(sessPath)
+	if os.IsNotExist(err) {
+		err = os.Mkdir(sessPath, fs.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = writeToFile(metatemp.ISessTemp, sessPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	log.Printf("Gen all meta file done.(%s)", time.Now().Sub(start).String())
 }
 

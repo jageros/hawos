@@ -33,20 +33,32 @@ import (
 	return fmt.Sprintf(head, fileName, pkg)
 }
 
-func MetaStruct(note, enum, msgId string) string {
+func MetaStruct(note, enum, msgId, req, resp string) string {
 	metaStruct := `
 %s
 //------------------------------------------------------------------------------------------
+
+var %s = %s_Meta{}
+
 // implement IMeta
 
 type %s_Meta struct {
+	handle func(session sess.ISession, msg *pb.%s) (resp *pb.%s, err error)
+}
+
+func (m *%s_Meta) RegistryHandle(f func(session sess.ISession, msg *pb.%s) (resp *pb.%s, err error)) {
+	m.handle = f
+}
+
+func (m *%s_Meta) Handle(session sess.ISession, arg interface{}) (interface{}, error) {
+	return m.handle(session, arg.(*pb.%s))
 }
 
 func (m *%s_Meta) GetMsgID() pb.%s {
 	return pb.%s_%s
 }
 `
-	return fmt.Sprintf(metaStruct, note, msgId, msgId, enum, enum, msgId)
+	return fmt.Sprintf(metaStruct, note, msgId, msgId, msgId, req, resp, msgId, req, resp, msgId, req, msgId, enum, enum, msgId)
 }
 
 func EncodeArg(msgId, req string) string {
@@ -147,7 +159,7 @@ func End(msgId string) string {
 }
 
 func GenMeta(enumName, notes, msgid, req, resp string) string {
-	code := MetaStruct(notes, enumName, msgid)
+	code := MetaStruct(notes, enumName, msgid, req, resp)
 	code += EncodeArg(msgid, req)
 	code += DecodeArg(msgid, req)
 	code += EncodeReply(msgid, resp)

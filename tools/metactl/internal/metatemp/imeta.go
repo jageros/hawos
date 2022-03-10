@@ -21,6 +21,9 @@ package meta
 
 import (
 	"errors"
+
+	"%s/meta"
+
 	pb "%s"
 )
 
@@ -34,6 +37,7 @@ type IMeta interface {
 	DecodeArg([]byte) (interface{}, error)
 	EncodeReply(interface{}) ([]byte, error)
 	DecodeReply([]byte) (interface{}, error)
+	Handle(session sess.ISession, arg interface{}) (interface{}, error)
 }
 
 func registerMeta(meta IMeta) {
@@ -49,6 +53,6 @@ func GetMeta(msgId pb.%s) (IMeta, error) {
 }
 `
 
-func GenIMetaFile(enumName, inPkg string) string {
-	return fmt.Sprintf(iMeta, inPkg, enumName, enumName, enumName)
+func GenIMetaFile(enumName, basePath, inPkg string) string {
+	return fmt.Sprintf(iMeta, basePath, inPkg, enumName, enumName, enumName)
 }
