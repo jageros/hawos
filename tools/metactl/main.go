@@ -81,6 +81,14 @@ func main() {
 		}
 	}
 
+	sessPkg := fmt.Sprintf("%s/%s/meta/sess", *module, *outDir)
+	sessPkg = strings.Replace(sessPkg, "//", "/", -1)
+
+	err = writeToFile(metatemp.GenIMetaFile(*eumName, sessPkg, *pbPkg), fmt.Sprintf("%s/meta/imeta.go", *outDir))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var msgids []string
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".proto") {
@@ -92,7 +100,7 @@ func main() {
 				log.Fatal(err)
 			}
 			lines := strings.Split(string(text), "\n")
-			code, msgid, err := metatemp.GenMetaFile(file.Name(), *pbPkg, *eumName, lines)
+			code, msgid, err := metatemp.GenMetaFile(file.Name(), *pbPkg, sessPkg, *eumName, lines)
 			if err != nil {
 				continue
 			}
@@ -110,13 +118,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sessPkg := fmt.Sprintf("%s/%s/meta/sess", *module, *outDir)
-	sessPkg = strings.Replace(sessPkg, "//", "/", -1)
-
-	err = writeToFile(metatemp.GenIMetaFile(*eumName, sessPkg, *pbPkg), fmt.Sprintf("%s/meta/imeta.go", *outDir))
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	sessPath := fmt.Sprintf("%s/meta/sess", *outDir)
 	sessPath = strings.Replace(sessPath, "//", "/", -1)
@@ -128,7 +129,7 @@ func main() {
 		}
 	}
 
-	err = writeToFile(metatemp.ISessTemp+"/sess.go", sessPath)
+	err = writeToFile(metatemp.ISessTemp, sessPath+"/sess.go")
 	if err != nil {
 		log.Fatal(err)
 	}
