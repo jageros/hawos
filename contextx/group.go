@@ -22,12 +22,9 @@ type groupCtx struct {
 	ctx    context.Context
 	cancel CancelFunc
 
-	subCancel []CancelFunc
-
 	wg      sync.WaitGroup
 	errOnce sync.Once
 	err     error
-	parent  *groupCtx
 }
 
 func newGroup(ctx context.Context, cancel CancelFunc) (*groupCtx, CancelFunc) {
@@ -37,92 +34,41 @@ func newGroup(ctx context.Context, cancel CancelFunc) (*groupCtx, CancelFunc) {
 	}, cancel
 }
 
-func (gCtx *groupCtx) subGroup(ctx context.Context, cancel CancelFunc) (Context, CancelFunc) {
-	gCtx.subCancel = append(gCtx.subCancel, cancel)
-	return &groupCtx{
-		ctx:    ctx,
-		cancel: cancel,
-		parent: gCtx,
-	}, cancel
+func (c *groupCtx) Deadline() (deadline time.Time, ok bool) {
+	return c.ctx.Deadline()
 }
 
-func (gCtx *groupCtx) add(delta int) {
-	if gCtx.parent != nil {
-		gCtx.parent.add(delta)
-	}
-	gCtx.wg.Add(delta)
+func (c *groupCtx) Done() <-chan struct{} {
+	return c.ctx.Done()
 }
 
-func (gCtx *groupCtx) done() {
-	if gCtx.parent != nil {
-		gCtx.parent.done()
-	}
-	gCtx.wg.Done()
+func (c *groupCtx) Err() error {
+	return c.ctx.Err()
 }
 
-func (gCtx *groupCtx) Deadline() (deadline time.Time, ok bool) {
-	return gCtx.ctx.Deadline()
+func (c *groupCtx) Value(key interface{}) interface{} {
+	return c.ctx.Value(key)
 }
 
-func (gCtx *groupCtx) Done() <-chan struct{} {
-	return gCtx.ctx.Done()
-}
-
-func (gCtx *groupCtx) Err() error {
-	return gCtx.ctx.Err()
-}
-
-func (gCtx *groupCtx) Value(key interface{}) interface{} {
-	return gCtx.ctx.Value(key)
-}
-
-func (gCtx *groupCtx) Go(f func(ctx Context) error) {
-	gCtx.add(1)
-
+func (c *groupCtx) Go(f func(ctx context.Context) error) {
+	c.wg.Add(1)
 	go func() {
-		defer gCtx.done()
-
-		if err := f(gCtx); err != nil {
-			gCtx.errOnce.Do(func() {
-				gCtx.err = err
-				if gCtx.cancel != nil {
-					gCtx.cancel()
+		defer c.wg.Done()
+		if err := f(c); err != nil {
+			c.errOnce.Do(func() {
+				c.err = err
+				if c.cancel != nil {
+					c.cancel()
 				}
 			})
 		}
 	}()
 }
 
-func (gCtx *groupCtx) Wait() error {
-	gCtx.wg.Wait()
-	if gCtx.cancel != nil {
-		gCtx.cancel()
+func (c *groupCtx) Wait() error {
+	c.wg.Wait()
+	if c.cancel != nil {
+		c.cancel()
 	}
-	return gCtx.err
-}
-
-func (gCtx *groupCtx) CancelSub() {
-	for _, cancel := range gCtx.subCancel {
-		cancel()
-	}
-}
-
-// ================ sub ctx ================
-
-func (gCtx *groupCtx) WithCancel() (Context, CancelFunc) {
-	ctx, cancel := context.WithCancel(gCtx)
-	return gCtx.subGroup(ctx, CancelFunc(cancel))
-}
-func (gCtx *groupCtx) WithTimeout(timeout time.Duration) (Context, CancelFunc) {
-	ctx, cancel := context.WithTimeout(gCtx, timeout)
-	return gCtx.subGroup(ctx, CancelFunc(cancel))
-}
-func (gCtx *groupCtx) WithDeadline(d time.Time) (Context, CancelFunc) {
-	ctx, cancel := context.WithDeadline(gCtx, d)
-	return gCtx.subGroup(ctx, CancelFunc(cancel))
-}
-func (gCtx *groupCtx) WithValue(key, val interface{}) (Context, CancelFunc) {
-	ctx, cancel := context.WithCancel(gCtx)
-	ctx = context.WithValue(ctx, key, val)
-	return gCtx.subGroup(ctx, CancelFunc(cancel))
+	return c.err
 }

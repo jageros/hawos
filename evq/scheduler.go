@@ -1,6 +1,7 @@
 package evq
 
 import (
+	"context"
 	"fmt"
 	"github.com/eapache/queue"
 	"github.com/jageros/hawox/contextx"
@@ -37,7 +38,7 @@ var mainEvScheduler = &eventScheduler{
 func Initialize(ctx contextx.Context) {
 	mainEvScheduler.initOnce.Do(func() {
 		mainEvScheduler.start()
-		ctx.Go(func(ctx contextx.Context) error {
+		ctx.Go(func(ctx context.Context) error {
 			<-ctx.Done()
 			mainEvScheduler.stop()
 			return nil
@@ -74,7 +75,7 @@ func NewCommonEvent(evenID int, data ...interface{}) *CommonEvent {
 	return e
 }
 
-// implement IEvent
+// Coroutine implement IEvent
 type Coroutine struct {
 	id     int
 	goid   int

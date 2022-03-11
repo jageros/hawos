@@ -12,10 +12,11 @@ enum MsgID {
 }
 
 enum MsgType {
-  Req = 0;
-  Reply = 1;
-  Push = 2;
-  Err = 3;
+  Unknown = 0;
+  Req = 1;
+  Reply = 2;
+  Push = 3;
+  Err = 4;
 }
 
 message PkgMsg {

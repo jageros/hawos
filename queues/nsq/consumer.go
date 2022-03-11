@@ -13,6 +13,7 @@
 package nsq
 
 import (
+	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
 	"github.com/jageros/hawox/protos/pbf"
@@ -85,7 +86,7 @@ func (c *Consumer) HandleMessage(msg *nsq.Message) error {
 }
 
 func (c *Consumer) run() {
-	c.ctx.Go(func(ctx contextx.Context) error {
+	c.ctx.Go(func(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			if c.csr != nil {

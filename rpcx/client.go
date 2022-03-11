@@ -13,6 +13,7 @@
 package rpcx
 
 import (
+	"context"
 	"fmt"
 	"github.com/jageros/hawox/contextx"
 	"google.golang.org/grpc/resolver"
@@ -92,7 +93,7 @@ func (c *client) getConnByName(name string) (*grpc.ClientConn, error) {
 
 	target := fmt.Sprintf("%s:///%s", discovery.Name, name)
 
-	ctx, cancel := c.ctx.WithTimeout(c.callTimeout)
+	ctx, cancel := context.WithTimeout(c.ctx, c.callTimeout)
 	defer cancel()
 
 	cc, err := grpc.DialContext(
@@ -147,7 +148,7 @@ func (c *client) getConnByName(name string) (*grpc.ClientConn, error) {
 //}
 
 func (c *client) stopMonitor() {
-	c.ctx.Go(func(ctx contextx.Context) error {
+	c.ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		for _, cc := range c.conns {
 			cc.Close()
@@ -161,7 +162,7 @@ func (c *client) stopMonitor() {
 func (c *client) call(cc *grpc.ClientConn, rpcFn RpcFn) errcode.IErr {
 	state := cc.GetState()
 	if state != connectivity.Ready {
-		ctx, cancel := c.ctx.WithTimeout(c.callTimeout)
+		ctx, cancel := context.WithTimeout(c.ctx, c.callTimeout)
 		cc.WaitForStateChange(ctx, state)
 		cancel()
 	}

@@ -17,29 +17,28 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 type Context interface {
 	context.Context
-	Go(func(ctx Context) error)
+	Go(func(ctx context.Context) error)
 	Wait() error
-	CancelSub()
-	WithCancel() (Context, CancelFunc)
-	WithTimeout(timeout time.Duration) (Context, CancelFunc)
-	WithDeadline(d time.Time) (Context, CancelFunc)
-	WithValue(key, val interface{}) (Context, CancelFunc)
 }
 
 type CancelFunc context.CancelFunc
+
+func Default() (Context, CancelFunc) {
+	return WithSignal(syscall.SIGINT, syscall.SIGTERM)
+}
 
 func WithSignal(sig ...os.Signal) (Context, CancelFunc) {
 	ctx, cancel := signal.NotifyContext(context.Background(), sig...)
 	return newGroup(ctx, CancelFunc(cancel))
 }
 
-func Default() (Context, CancelFunc) {
-	return WithSignal(syscall.SIGINT, syscall.SIGTERM)
+func WithCancel(parent context.Context) (Context, CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
+	return newGroup(ctx, CancelFunc(cancel))
 }
 
 func Background() Context {

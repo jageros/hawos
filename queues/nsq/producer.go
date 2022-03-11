@@ -13,6 +13,7 @@
 package nsq
 
 import (
+	"context"
 	"fmt"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/errcode"
@@ -144,7 +145,7 @@ func NewProducer(g contextx.Context, opfs ...func(cfg *Config)) (*Producer, erro
 }
 
 func (p *Producer) run() {
-	p.ctx.Go(func(ctx contextx.Context) error {
+	p.ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		p.pd.Stop()
 		return ctx.Err()

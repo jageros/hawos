@@ -15,6 +15,7 @@ type listener struct {
 	handler func(args ...interface{})
 }
 
+// Subscribe
 /****************************************************************
  * func：监听事件函数
  * eventID： 事件id
@@ -36,6 +37,7 @@ func Subscribe(eventID int, handler func(args ...interface{})) (seq int) {
 	return seq
 }
 
+// Publish
 /*******************************************
  * func： 发布事件
  * eventID 事件id
@@ -58,6 +60,7 @@ func Publish(eventID int, args ...interface{}) {
 	}
 }
 
+// Unsubscribe
 /*************************************
  * func： 取消监听
  * eventID 事件ID

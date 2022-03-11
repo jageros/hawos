@@ -1,8 +1,8 @@
 package wsc
 
 import (
+	"context"
 	"errors"
-	"github.com/jageros/hawox/contextx"
 	"net/http"
 	"sync"
 	"time"
@@ -78,7 +78,7 @@ func (s *Session) pong() {
 	s.writeRaw(&envelope{t: websocket.PongMessage, msg: []byte{}})
 }
 
-func (s *Session) writePump(ctx contextx.Context) error {
+func (s *Session) writePump(ctx context.Context) error {
 loop:
 	for {
 		select {
@@ -112,7 +112,7 @@ loop:
 	return nil
 }
 
-func (s *Session) readPump(ctx contextx.Context) error {
+func (s *Session) readPump(ctx context.Context) error {
 	//s.conn.SetReadLimit(s.melody.Config.MaxMessageSize)
 	err := s.conn.SetReadDeadline(time.Now().Add(s.melody.Config.PongWait))
 	if err != nil {

@@ -2,6 +2,7 @@ package timer
 
 import (
 	"container/heap"
+	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/evq"
 	"sync"
@@ -249,7 +250,7 @@ func Initialize(ctx contextx.Context) {
 		heap.Init(&tHeap)
 		eventId = evq.CreateEventID()
 		evq.HandleEvent(eventId, onTimer)
-		ctx.Go(func(ctx contextx.Context) error {
+		ctx.Go(func(ctx context.Context) error {
 			tk := time.NewTicker(time.Millisecond * 200)
 			for {
 				select {

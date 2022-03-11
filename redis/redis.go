@@ -13,6 +13,7 @@
 package redis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/jageros/hawox/contextx"
@@ -82,7 +83,7 @@ func Initialize(ctx contextx.Context, opfs ...func(rdb RdbConfig)) {
 
 	RDB.ctx = ctx
 
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		tk := time.NewTicker(RDB.PingTime)
 		defer tk.Stop()
 		for {
@@ -154,7 +155,7 @@ func (rd *Redis) Close() error {
 	return err
 }
 
-func (rd *Redis) Ping(ctx contextx.Context) *redis.StatusCmd {
+func (rd *Redis) Ping(ctx context.Context) *redis.StatusCmd {
 	var status *redis.StatusCmd
 	if rd.cli != nil {
 		status = rd.cli.Ping(ctx)
@@ -165,7 +166,7 @@ func (rd *Redis) Ping(ctx contextx.Context) *redis.StatusCmd {
 	return status
 }
 
-func (rd *Redis) Do(ctx contextx.Context, args ...interface{}) *redis.Cmd {
+func (rd *Redis) Do(ctx context.Context, args ...interface{}) *redis.Cmd {
 	if rd.cluster != nil {
 		return rd.cluster.Do(ctx, args...)
 	}
@@ -177,7 +178,7 @@ func (rd *Redis) Do(ctx contextx.Context, args ...interface{}) *redis.Cmd {
 	return cmd
 }
 
-func (rd *Redis) Get(ctx contextx.Context, key string) *redis.StringCmd {
+func (rd *Redis) Get(ctx context.Context, key string) *redis.StringCmd {
 	if rd.cluster != nil {
 		return rd.cluster.Get(ctx, key)
 	}
@@ -189,7 +190,7 @@ func (rd *Redis) Get(ctx contextx.Context, key string) *redis.StringCmd {
 	return cmd
 }
 
-func (rd *Redis) Set(ctx contextx.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
+func (rd *Redis) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
 	if rd.cluster != nil {
 		return rd.cluster.Set(ctx, key, value, expiration)
 	}
@@ -201,7 +202,7 @@ func (rd *Redis) Set(ctx contextx.Context, key string, value interface{}, expira
 	return cmd
 }
 
-func (rd *Redis) HMSet(ctx contextx.Context, key string, value ...interface{}) *redis.BoolCmd {
+func (rd *Redis) HMSet(ctx context.Context, key string, value ...interface{}) *redis.BoolCmd {
 	if rd.cluster != nil {
 		return rd.cluster.HMSet(ctx, key, value...)
 	}
@@ -213,7 +214,7 @@ func (rd *Redis) HMSet(ctx contextx.Context, key string, value ...interface{}) *
 	return cmd
 }
 
-func (rd *Redis) HGetAll(ctx contextx.Context, key string) *redis.StringStringMapCmd {
+func (rd *Redis) HGetAll(ctx context.Context, key string) *redis.StringStringMapCmd {
 	if rd.cluster != nil {
 		return rd.cluster.HGetAll(ctx, key)
 	}
@@ -225,7 +226,7 @@ func (rd *Redis) HGetAll(ctx contextx.Context, key string) *redis.StringStringMa
 	return cmd
 }
 
-func (rd *Redis) SetNX(ctx contextx.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
+func (rd *Redis) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
 	if rd.cluster != nil {
 		return rd.cluster.SetNX(ctx, key, value, expiration)
 	}
@@ -237,7 +238,7 @@ func (rd *Redis) SetNX(ctx contextx.Context, key string, value interface{}, expi
 	return cmd
 }
 
-func (rd *Redis) Del(ctx contextx.Context, keys ...string) *redis.IntCmd {
+func (rd *Redis) Del(ctx context.Context, keys ...string) *redis.IntCmd {
 	if rd.cluster != nil {
 		return rd.cluster.Del(ctx, keys...)
 	}
@@ -249,7 +250,7 @@ func (rd *Redis) Del(ctx contextx.Context, keys ...string) *redis.IntCmd {
 	return cmd
 }
 
-func (rd *Redis) Incr(ctx contextx.Context, key string) *redis.IntCmd {
+func (rd *Redis) Incr(ctx context.Context, key string) *redis.IntCmd {
 	if rd.cluster != nil {
 		return rd.cluster.Incr(ctx, key)
 	}
@@ -261,7 +262,7 @@ func (rd *Redis) Incr(ctx contextx.Context, key string) *redis.IntCmd {
 	return cmd
 }
 
-func (rd *Redis) Publish(ctx contextx.Context, channel string, message interface{}) *redis.IntCmd {
+func (rd *Redis) Publish(ctx context.Context, channel string, message interface{}) *redis.IntCmd {
 	if rd.cluster != nil {
 		return rd.cluster.Publish(ctx, channel, message)
 	}
@@ -273,7 +274,7 @@ func (rd *Redis) Publish(ctx contextx.Context, channel string, message interface
 	return cmd
 }
 
-func (rd *Redis) Subscribe(ctx contextx.Context, channels ...string) (*redis.PubSub, error) {
+func (rd *Redis) Subscribe(ctx context.Context, channels ...string) (*redis.PubSub, error) {
 	if rd.cluster != nil {
 		return rd.cluster.Subscribe(ctx, channels...), nil
 	}
@@ -372,7 +373,7 @@ func GetCache(key string, v Encoder) error {
 }
 
 func LockExec(key string, f func(key string)) error {
-	ctx, cancel := RDB.ctx.WithTimeout(RDB.WaitTimeout)
+	ctx, cancel := context.WithTimeout(RDB.ctx, RDB.WaitTimeout)
 	defer cancel()
 	lockKey := key + "-lock"
 	var ok bool

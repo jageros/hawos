@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/example/mygame/internal/service/player"
 	"github.com/jageros/hawox/example/mygame/internal/session"
 	"github.com/jageros/hawox/example/mygame/protos/meta"
 	"github.com/jageros/hawox/example/mygame/protos/pb"
@@ -29,10 +30,13 @@ func main() {
 	logx.Init(logx.DebugLevel)
 	ctx, cancel := contextx.Default()
 	defer cancel()
+
+	player.RegisterRpcHandle()
+
 	httpx.InitializeHttpServer(ctx, func(engine *gin.Engine) {
 		r := engine.Group("/ws")
 		ws.Init(ctx, r)
-	}, func(s *httpx.Server) {
+	}, func(s *httpx.Option) {
 		s.Port = 10088
 	})
 	ws.OnMessageBinary(func(ss *melody.Session, bytes []byte) {
@@ -43,37 +47,55 @@ func main() {
 			return
 		}
 		sess := session.New(1001, 1000, 1)
-		resp, err := meta.Call(sess, arg.Msgid, arg.Payload)
-		if err != nil {
-			if ierr, ok := err.(errcode.IErr); ok {
-				reply := &pb.PkgMsg{
-					Type: pb.MsgType_Err,
-					Msgid: arg.Msgid,
 
-				}
-				data, _ := reply.Marshal()
-				err = ss.WriteBinary(data)
-				if err != nil {
-					logx.Error(err)
-				}
+		resp, pbErr := OnClientMsg(sess, arg)
+		var reply = &pb.PkgMsg{
+			Msgid: arg.Msgid,
+		}
+		if pbErr != nil {
+			data, _ := pbErr.Marshal()
+			reply.Type = pb.MsgType_Err
+			reply.Payload = data
+		} else if resp != nil {
+			reply.Type = pb.MsgType_Reply
+			reply.Payload = resp
+		}
+
+		if reply.Type != pb.MsgType_Unknown {
+			data, _ := reply.Marshal()
+			err = ss.WriteBinary(data)
+			if err != nil {
+				logx.Error(err)
 			}
 		}
-		return
-	}
-	if resp != nil {
-		reply := &pb.RespMsg{
-			Msgid:   arg.Msgid,
-			Payload: resp,
-		}
-		data, _ := reply.Marshal()
-		err = ss.WriteBinary(data)
-		if err != nil {
-			logx.Error(err)
-		}
-	}
-})
-player.RegisterRpcHandle()
+	})
 
-logx.Infof("server stop with: %v", ctx.Wait())
-logx.Sync()
+	logx.Infof("server stop with: %v", ctx.Wait())
+	logx.Sync()
+}
+
+func OnClientMsg(ss *session.Session, arg *pb.PkgMsg) ([]byte, *pb.ErrMsg) {
+	var er = &pb.ErrMsg{
+		Code: 200,
+		Msg:  "successful",
+	}
+
+	resp, err := meta.Call(ss, arg.Msgid, arg.Payload)
+	if err != nil {
+		if ierr, ok := err.(errcode.IErr); ok {
+			er.Code = ierr.Code()
+			er.Msg = ierr.ErrMsg()
+		} else {
+			er.Code = -1000
+			er.Msg = err.Error()
+		}
+		return nil, er
+	}
+
+	if resp != nil {
+		return resp, nil
+	} else if arg.Type == pb.MsgType_Req {
+		return nil, er
+	}
+	return nil, nil
 }

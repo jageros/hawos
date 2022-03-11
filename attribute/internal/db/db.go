@@ -1,20 +1,22 @@
 package db
 
 import (
+	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/jageros/hawox/attribute/internal/db/mongo"
+	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/evq"
-	"github.com/jageros/hawox/timer"
 	"github.com/xiaonanln/go-xnsyncutil/xnsyncutil"
 )
 
-var clients []IDbClient
-var initOnce sync.Once
+var (
+	clients  []IDbClient
+	initOnce sync.Once
+)
 
 type iDbEngine interface {
 	Read(attrName string, attrID interface{}) (map[string]interface{}, error)
@@ -69,8 +71,7 @@ type dbClient struct {
 
 func Initialize(ctx contextx.Context) {
 	initOnce.Do(func() {
-		timer.Initialize(ctx)
-		ctx.Go(func(ctx contextx.Context) error {
+		ctx.Go(func(ctx context.Context) error {
 			<-ctx.Done()
 			for _, c := range clients {
 				c.shutdown()

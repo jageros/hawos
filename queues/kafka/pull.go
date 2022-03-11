@@ -13,6 +13,7 @@
 package kafka
 
 import (
+	"context"
 	"github.com/Shopify/sarama"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
@@ -68,7 +69,7 @@ func NewConsumer(ctx contextx.Context, opfs ...func(cfg *Config)) (*Consumer, er
 }
 
 func (c *Consumer) run() {
-	c.ctx.Go(func(ctx contextx.Context) error {
+	c.ctx.Go(func(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():

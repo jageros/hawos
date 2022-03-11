@@ -13,6 +13,7 @@
 package udpc
 
 import (
+	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/errcode"
 	"github.com/jageros/hawox/logx"
@@ -61,12 +62,13 @@ func New(ctx contextx.Context, opfs ...func(opt *ClientOption)) (*Client, error)
 	if err != nil {
 		return nil, err
 	}
-	ctx_, cancel := ctx.WithCancel()
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		return conn.Close()
 	})
-	ctx_.Go(func(ctx contextx.Context) error {
+
+	ctx_, cancel := contextx.WithCancel(ctx)
+	ctx_.Go(func(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():

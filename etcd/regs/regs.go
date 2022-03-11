@@ -121,7 +121,7 @@ func (r *Registry) del(key string) {
 }
 
 func (r *Registry) update() {
-	r.ctx.Go(func(ctx contextx.Context) error {
+	r.ctx.Go(func(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -149,7 +149,7 @@ func (r *Registry) update() {
 }
 
 func (r *Registry) watch() {
-	r.ctx.Go(func(ctx contextx.Context) error {
+	r.ctx.Go(func(ctx context.Context) error {
 		r.watchChan = r.watcher.Watch(ctx, r.namespace, clientv3.WithPrefix(), clientv3.WithRev(0))
 		err := r.watcher.RequestProgress(ctx)
 		if err != nil {
@@ -203,7 +203,7 @@ func (r *Registry) Register(key, value string) error {
 	if err != nil {
 		return err
 	}
-	r.ctx.Go(func(ctx contextx.Context) error {
+	r.ctx.Go(func(ctx context.Context) error {
 		for {
 			select {
 			case _, ok := <-hb:
@@ -240,7 +240,7 @@ func (r *Registry) RegisterWithAutoDeregister(key, value string) error {
 	if err != nil {
 		return err
 	}
-	r.ctx.Go(func(ctx contextx.Context) error {
+	r.ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		return r.Deregister(key)
 	})

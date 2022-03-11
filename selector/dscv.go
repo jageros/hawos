@@ -13,6 +13,7 @@
 package selector
 
 import (
+	"context"
 	"fmt"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
@@ -65,7 +66,7 @@ type Registry struct {
 }
 
 func (r *Registry) run() {
-	r.ctx.Go(func(ctx contextx.Context) error {
+	r.ctx.Go(func(ctx context.Context) error {
 		r.watchChan = r.watcher.Watch(ctx, r.opts.Namespace, clientv3.WithPrefix(), clientv3.WithRev(0))
 		err := r.watcher.RequestProgress(ctx)
 		if err != nil {
@@ -164,7 +165,7 @@ func (r *Registry) Register() error {
 	if err != nil {
 		return err
 	}
-	r.ctx.Go(func(ctx contextx.Context) error {
+	r.ctx.Go(func(ctx context.Context) error {
 		for {
 			select {
 			case _, ok := <-hb:
@@ -187,7 +188,7 @@ func (r *Registry) deregister() {
 		}
 	}()
 	key := fmt.Sprintf("%s/%s/%s", r.opts.Namespace, r.opts.Name, r.opts.Id)
-	ctx, cancel := r.ctx.WithTimeout(time.Second * 10)
+	ctx, cancel := context.WithTimeout(r.ctx, time.Second*10)
 	defer cancel()
 	_, err := r.client.Delete(ctx, key)
 	if err != nil {

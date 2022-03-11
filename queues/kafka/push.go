@@ -13,6 +13,7 @@
 package kafka
 
 import (
+	"context"
 	"github.com/Shopify/sarama"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/errcode"
@@ -103,7 +104,7 @@ func (p *Producer) Push(msg *pbf.QueueMsg) error {
 		Topic: p.cfg.Topic,
 		Value: sarama.ByteEncoder(byData),
 	}
-	p.ctx.Go(func(ctx contextx.Context) error {
+	p.ctx.Go(func(ctx context.Context) error {
 		select {
 		case p.pd.Input() <- msg_:
 			return nil
@@ -115,7 +116,7 @@ func (p *Producer) Push(msg *pbf.QueueMsg) error {
 }
 
 func (p *Producer) run() {
-	p.ctx.Go(func(ctx contextx.Context) error {
+	p.ctx.Go(func(ctx context.Context) error {
 		var offset int64 = -1
 		for {
 			select {

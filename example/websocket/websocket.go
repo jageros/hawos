@@ -40,7 +40,7 @@ func main() {
 			//	}
 			//})
 		})
-	}, func(s *httpx.Server) {
+	}, func(s *httpx.Option) {
 		s.Mode = flags.Options.Mode
 		s.ListenIp = flags.Options.HttpIp
 		s.Port = flags.Options.HttpPort

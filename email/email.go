@@ -13,6 +13,7 @@
 package email
 
 import (
+	"context"
 	"fmt"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
@@ -62,7 +63,7 @@ func Initialize(ctx contextx.Context, opfs ...func(opt *Option)) error {
 		return err
 	}
 
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		pool.Close()
 		return ctx.Err()
@@ -93,7 +94,7 @@ func (e *Email) mail() *email.Email {
 }
 
 func (e *Email) Send() {
-	opt_.g.Go(func(ctx contextx.Context) error {
+	opt_.g.Go(func(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

@@ -35,7 +35,7 @@ func mode(value string) string {
 	return gin.DebugMode
 }
 
-type Server struct {
+type Option struct {
 	ListenIp     string // 监听IP
 	Port         int    // 监听端口
 	Mode         string
@@ -43,12 +43,10 @@ type Server struct {
 	WriteTimeout time.Duration
 	CloseTimeout time.Duration
 	RateTime     time.Duration
-	engine       *gin.Engine
-	svr          *http.Server
 }
 
-func defaultServer() *Server {
-	return &Server{
+func defaultOption() *Option {
+	return &Option{
 		ListenIp:     "",
 		Port:         8888,
 		Mode:         gin.DebugMode,
@@ -59,41 +57,41 @@ func defaultServer() *Server {
 	}
 }
 
-func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine), opfs ...func(s *Server)) {
-	s := defaultServer()
+func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine), opfs ...func(s *Option)) {
+	opt := defaultOption()
 
 	for _, opf := range opfs {
-		opf(s)
+		opf(opt)
 	}
-	s.Mode = mode(s.Mode)
+	opt.Mode = mode(opt.Mode)
 
-	gin.SetMode(s.Mode)
+	gin.SetMode(opt.Mode)
 	engine := gin.New()
 	gin.ForceConsoleColor()
 	engine.Use(logger(), gin.Recovery(), cors.Default())
-	if s.RateTime > 0 {
-		engine.Use(RateMiddleware(s.RateTime))
+	if opt.RateTime > 0 {
+		engine.Use(RateMiddleware(opt.RateTime))
 	}
-	registry(engine)
-	s.engine = engine
 
-	addr := fmt.Sprintf("%s:%d", s.ListenIp, s.Port)
-	s.svr = &http.Server{
+	registry(engine)
+
+	addr := fmt.Sprintf("%opt:%d", opt.ListenIp, opt.Port)
+	s := &http.Server{
 		Addr:         addr,
 		Handler:      engine,
-		ReadTimeout:  s.ReadTimeout,
-		WriteTimeout: s.WriteTimeout,
+		ReadTimeout:  opt.ReadTimeout,
+		WriteTimeout: opt.WriteTimeout,
 		BaseContext: func(listener net.Listener) context.Context {
 			return ctx
 		},
 	}
-	ctx.Go(func(ctx contextx.Context) error {
-		return s.svr.ListenAndServe()
+	ctx.Go(func(ctx context.Context) error {
+		return s.ListenAndServe()
 	})
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
-		ctx2, cancel := context.WithTimeout(context.Background(), s.CloseTimeout)
+		ctx2, cancel := context.WithTimeout(context.Background(), opt.CloseTimeout)
 		defer cancel()
-		return s.svr.Shutdown(ctx2)
+		return s.Shutdown(ctx2)
 	})
 }

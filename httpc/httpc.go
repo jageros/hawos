@@ -43,6 +43,12 @@ func init() {
 	cli = http.DefaultClient
 }
 
+func SetHeader(req *http.Request, arg map[string]string) {
+	for key, val := range arg {
+		req.Header.Set(key, val)
+	}
+}
+
 func Request(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string) (result []byte, err error) {
 	var data []byte
 

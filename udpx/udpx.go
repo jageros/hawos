@@ -13,6 +13,7 @@
 package udpx
 
 import (
+	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
 	"net"
@@ -75,18 +76,18 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 		op(s)
 	}
 
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx_ context.Context) error {
 		conn, err := net.ListenUDP("udp", s.LAddr)
 		if err != nil {
 			return err
 		}
 		logx.Infof("UDP listen addr=%s", s.LAddr.String())
-		ctx.Go(func(ctx contextx.Context) error {
+		ctx.Go(func(ctx context.Context) error {
 			<-ctx.Done()
 			close(msgCh)
 			return conn.Close()
 		})
-		ctx.Go(func(ctx contextx.Context) error {
+		ctx.Go(func(ctx context.Context) error {
 			for {
 				select {
 				case <-ctx.Done():

@@ -13,6 +13,7 @@
 package udpc
 
 import (
+	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/udpx"
 	"net"
@@ -35,14 +36,14 @@ type Handle func(rAddr *net.UDPAddr, msgType udpx.MsgType, payload []byte)
 
 type SetConfig func(maxPkgSize int)
 
-func InitConn(ctx contextx.Context, lAddr *net.UDPAddr, f Handle, s) error {
+func InitConn(ctx contextx.Context, lAddr *net.UDPAddr, f Handle) error {
 	var err error
 	conn, err = net.ListenUDP("udp", lAddr)
 	if err != nil {
 		return err
 	}
 	handle = f
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		return conn.Close()
 	})
@@ -51,7 +52,7 @@ func InitConn(ctx contextx.Context, lAddr *net.UDPAddr, f Handle, s) error {
 }
 
 func read(ctx contextx.Context) {
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():

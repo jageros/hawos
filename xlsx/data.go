@@ -13,6 +13,7 @@
 package xlsx
 
 import (
+	"context"
 	"github.com/jageros/hawox/attribute"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
@@ -103,7 +104,7 @@ func Load(ctx contextx.Context, gdatas ...IData) {
 		}
 	}
 
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():

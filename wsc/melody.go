@@ -1,6 +1,7 @@
 package wsc
 
 import (
+	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
 	"net/http"
@@ -167,7 +168,7 @@ func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[
 	//	return errors.New("melody instance is closed")
 	//}
 
-	ctx, cancel := m.ctx.WithTimeout(time.Second * 5)
+	ctx, cancel := context.WithTimeout(m.ctx, time.Second*5)
 	defer cancel()
 	conn, r, err := websocket.DefaultDialer.DialContext(ctx, addr, header)
 
@@ -197,16 +198,16 @@ func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[
 
 	m.connectHandler(session)
 
-	ctx, _ = m.ctx.WithCancel()
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx_, _ := contextx.WithCancel(m.ctx)
+	ctx_.Go(func(ctx context.Context) error {
 		return session.writePump(ctx)
 	})
 
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx_.Go(func(ctx context.Context) error {
 		return session.readPump(ctx)
 	})
 
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx_.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		//if !m.hub.closed() {
 		//	select {
@@ -218,8 +219,8 @@ func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[
 		m.disconnectHandler(session)
 		return ctx.Err()
 	})
-	m.ctx.Go(func(_ contextx.Context) error {
-		err := ctx.Wait()
+	m.ctx.Go(func(_ context.Context) error {
+		err := ctx_.Wait()
 		if err != nil {
 			logx.Errorf("session ctx done err: %v", err)
 		}

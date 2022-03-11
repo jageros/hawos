@@ -74,7 +74,7 @@ func (s *Server) RegistryService(registryFunc func(svr *grpc.Server)) {
 }
 
 func (s *Server) run() {
-	s.ctx.Go(func(ctx contextx.Context) error {
+	s.ctx.Go(func(ctx context.Context) error {
 		addr := fmt.Sprintf("%s:%d", s.option.Ip, s.option.Port)
 		li, err := net.Listen("tcp", addr)
 		if err != nil {
@@ -87,7 +87,7 @@ func (s *Server) run() {
 		return s.svr.Serve(li)
 	})
 
-	s.ctx.Go(func(ctx contextx.Context) error {
+	s.ctx.Go(func(ctx context.Context) error {
 		<-ctx.Done()
 		err := s.deregister()
 		s.svr.GracefulStop()

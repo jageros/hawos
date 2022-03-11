@@ -1,7 +1,8 @@
 package mongo
 
 import (
-	"github.com/jageros/hawox/timer"
+	"context"
+	"github.com/jageros/hawox/contextx"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io"
@@ -23,9 +24,10 @@ func (ad *attrData) GetData() map[string]interface{} {
 }
 
 type MongoDBEngine struct {
-	session    *mgo.Session
-	database   string
-	pingTicker *timer.Timer
+	session  *mgo.Session
+	database string
+	ctx      contextx.Context
+	cancel   contextx.CancelFunc
 }
 
 func OpenMongoDB(addr, dbname, user, passowrd string) (*MongoDBEngine, error) {
@@ -44,14 +46,34 @@ func OpenMongoDB(addr, dbname, user, passowrd string) (*MongoDBEngine, error) {
 
 	session.SetMode(mgo.Strong, true)
 
-	pingTicker := timer.AddTicker(10*time.Second, func() {
-		session.Ping()
+	ctx, cancel := contextx.WithCancel(context.Background())
+
+	ctx.Go(func(ctx context.Context) error {
+		tk := time.NewTicker(time.Second * 10)
+		var errNum int
+		for {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-tk.C:
+				err := session.Ping()
+				if err != nil {
+					errNum++
+					if errNum >= 10 {
+						return err
+					}
+				} else {
+					errNum = 0
+				}
+			}
+		}
 	})
 
 	return &MongoDBEngine{
-		session:    session,
-		database:   dbname,
-		pingTicker: pingTicker,
+		session:  session,
+		database: dbname,
+		ctx:      ctx,
+		cancel:   cancel,
 	}, nil
 }
 
@@ -157,10 +179,9 @@ func (e *MongoDBEngine) Exists(attrName string, attrID interface{}) (bool, error
 }
 
 func (e *MongoDBEngine) Close() {
+	e.cancel()
 	e.session.Close()
-	if e.pingTicker != nil {
-		e.pingTicker.Cancel()
-	}
+	e.ctx.Wait()
 }
 
 func (e *MongoDBEngine) IsEOF(err error) bool {

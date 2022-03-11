@@ -14,6 +14,7 @@ package kcp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/jageros/hawox/contextx"
 	"github.com/xtaci/kcp-go"
@@ -33,7 +34,7 @@ type Option struct {
 	DataShards   int
 	ParityShards int
 	Secret       string
-	HandleConn   func(ctx contextx.Context, conn net.Conn) error
+	HandleConn   func(ctx context.Context, conn net.Conn) error
 }
 
 func defaultOption() *Option {
@@ -60,10 +61,10 @@ func Server(ctx contextx.Context, opfs ...func(opt *Option)) {
 		fmt.Println(err)
 		return
 	}
-	ctx.Go(func(ctx contextx.Context) error {
+	ctx.Go(func(ctx_ context.Context) error {
 		for {
 			select {
-			case <-ctx.Done():
+			case <-ctx_.Done():
 				return listen.Close()
 			default:
 			}
@@ -72,8 +73,8 @@ func Server(ctx contextx.Context, opfs ...func(opt *Option)) {
 				return err
 			}
 			if op.HandleConn != nil {
-				ctx.Go(func(ctx contextx.Context) error {
-					return op.HandleConn(ctx, conn)
+				ctx.Go(func(ctx_ context.Context) error {
+					return op.HandleConn(ctx_, conn)
 				})
 			}
 		}
