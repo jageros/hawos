@@ -1,4 +1,4 @@
-package db
+package mgoattr
 
 import (
 	"context"
@@ -7,91 +7,46 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jageros/hawox/attribute/internal/db/mongo"
 	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/evq"
 	"github.com/xiaonanln/go-xnsyncutil/xnsyncutil"
 )
 
 var (
-	clients  []IDbClient
+	clients  []*dbClient
 	initOnce sync.Once
 )
 
-type iDbEngine interface {
-	Read(attrName string, attrID interface{}) (map[string]interface{}, error)
-
-	ReadAll(attrName string) ([]interface {
-		GetAttrID() interface{}
-		GetData() map[string]interface{}
-	}, error)
-
-	Query(attrName string) (func() (attrID interface{}, data map[string]interface{}, hasMore bool), error)
-
-	Write(attrName string, attrID interface{}, data map[string]interface{}) error
-	Insert(attrName string, attrID interface{}, data map[string]interface{}) error
-	Del(attrName string, attrID interface{}) error
-	Exists(attrName string, attrID interface{}) (bool, error)
-	Close()
-	IsEOF(err error) bool
-}
-
-type IDbConfig interface {
-	//GetType() string
-	GetAddr() string
-	GetDB() string
-	GetUser() string
-	GetPassword() string
-}
-
-type IDbClient interface {
-	getConfig() IDbConfig
-	Insert(attrName string, attrID interface{}, data map[string]interface{}) error
-	Save(attrName string, attrID interface{}, data map[string]interface{}, needReply bool) error
-	Del(attrName string, attrID interface{}, needReply bool) error
-	Load(attrName string, attrID interface{}, isSync ...interface{}) (map[string]interface{}, error)
-	Exists(attrName string, attrID interface{}) (bool, error)
-	ForEach(attrName string, callback func(attrID interface{}, data map[string]interface{}))
-	shutdown()
-
-	LoadAll(attrName string) ([]interface {
-		GetAttrID() interface{}
-		GetData() map[string]interface{}
-	}, error)
-}
-
 type dbClient struct {
-	cfg                  IDbConfig
-	dbEngine             iDbEngine
+	opt                  *Option
+	dbEngine             *mongoEngine
 	operationQueue       *xnsyncutil.SyncQueue
 	recentWarnedQueueLen int
 	shutdownOnce         sync.Once
 	shutdownNotify       chan struct{}
 }
 
-func Initialize(ctx contextx.Context) {
+func initDbs(ctx contextx.Context) {
 	initOnce.Do(func() {
 		ctx.Go(func(ctx context.Context) error {
 			<-ctx.Done()
 			for _, c := range clients {
 				c.shutdown()
 			}
-			clients = []IDbClient{}
+			clients = []*dbClient{}
 			return nil
 		})
 	})
 }
 
-func GetOrNewDbClient(cfg IDbConfig) IDbClient {
+func getOrNewDbClient(opt *Option) *dbClient {
 	for _, cli := range clients {
-		cfg2 := cli.getConfig()
-		if cfg2.GetAddr() == cfg.GetAddr() && cfg2.GetDB() == cfg.GetDB() {
+		if cli.opt.Addr == opt.Addr && cli.opt.DB == opt.DB {
 			return cli
 		}
 	}
 
 	cli := &dbClient{
-		cfg:            cfg,
+		opt:            opt,
 		operationQueue: xnsyncutil.NewSyncQueue(),
 		shutdownNotify: make(chan struct{}),
 		shutdownOnce:   sync.Once{},
@@ -99,7 +54,7 @@ func GetOrNewDbClient(cfg IDbConfig) IDbClient {
 
 	err := cli.assureDBEngineReady()
 	if err != nil {
-		log.Fatalf("db engine %s is not ready: %s", cfg, err)
+		log.Fatalf("db engine %s is not ready: %s", opt, err)
 	}
 
 	clients = append(clients, cli)
@@ -107,19 +62,15 @@ func GetOrNewDbClient(cfg IDbConfig) IDbClient {
 	return cli
 }
 
-func (c *dbClient) getConfig() IDbConfig {
-	return c.cfg
-}
-
 func (c *dbClient) assureDBEngineReady() (err error) {
 	if c.dbEngine != nil {
 		return
 	}
-	c.dbEngine, err = mongo.OpenMongoDB(c.cfg.GetAddr(), c.cfg.GetDB(), c.cfg.GetUser(), c.cfg.GetPassword())
+	c.dbEngine, err = openMongoDB(c.opt.Addr, c.opt.DB, c.opt.User, c.opt.Password)
 	return
 }
 
-func (c *dbClient) Insert(attrName string, attrID interface{}, data map[string]interface{}) error {
+func (c *dbClient) insert(attrName string, attrID interface{}, data map[string]interface{}) error {
 	req := &insertRequest{
 		attrName: attrName,
 		attrID:   attrID,
@@ -130,14 +81,11 @@ func (c *dbClient) Insert(attrName string, attrID interface{}, data map[string]i
 	c.operationQueue.Push(req)
 	c.checkOperationQueueLen()
 
-	var err error
-	evq.Await(func() {
-		err = <-req.c
-	})
+	err := <-req.c
 	return err
 }
 
-func (c *dbClient) Save(attrName string, attrID interface{}, data map[string]interface{}, needReply bool) error {
+func (c *dbClient) save(attrName string, attrID interface{}, data map[string]interface{}, needReply bool) error {
 	req := &saveRequest{
 		attrName: attrName,
 		attrID:   attrID,
@@ -151,17 +99,13 @@ func (c *dbClient) Save(attrName string, attrID interface{}, data map[string]int
 	c.checkOperationQueueLen()
 
 	if needReply {
-		var err error
-		evq.Await(func() {
-			err = <-req.c
-		})
-		return err
+		return <-req.c
 	} else {
 		return nil
 	}
 }
 
-func (c *dbClient) Del(attrName string, attrID interface{}, needReply bool) error {
+func (c *dbClient) del(attrName string, attrID interface{}, needReply bool) error {
 	req := &delRequest{
 		attrName: attrName,
 		attrID:   attrID,
@@ -174,17 +118,13 @@ func (c *dbClient) Del(attrName string, attrID interface{}, needReply bool) erro
 	c.checkOperationQueueLen()
 
 	if needReply {
-		var err error
-		evq.Await(func() {
-			err = <-req.c
-		})
-		return err
+		return <-req.c
 	} else {
 		return nil
 	}
 }
 
-func (c *dbClient) Load(attrName string, attrID interface{}, isSync ...interface{}) (map[string]interface{}, error) {
+func (c *dbClient) load(attrName string, attrID interface{}) (map[string]interface{}, error) {
 	req := &loadRequest{
 		attrName: attrName,
 		attrID:   attrID,
@@ -194,18 +134,11 @@ func (c *dbClient) Load(attrName string, attrID interface{}, isSync ...interface
 	c.operationQueue.Push(req)
 	c.checkOperationQueueLen()
 
-	var result *loadResult
-	if len(isSync) > 0 && isSync[0].(bool) {
-		result = <-req.c
-	} else {
-		evq.Await(func() {
-			result = <-req.c
-		})
-	}
+	result := <-req.c
 	return result.data, result.err
 }
 
-func (c *dbClient) Exists(attrName string, attrID interface{}) (bool, error) {
+func (c *dbClient) exists(attrName string, attrID interface{}) (bool, error) {
 	req := &existsRequest{
 		attrName: attrName,
 		attrID:   attrID,
@@ -215,14 +148,11 @@ func (c *dbClient) Exists(attrName string, attrID interface{}) (bool, error) {
 	c.operationQueue.Push(req)
 	c.checkOperationQueueLen()
 
-	var result *existsResult
-	evq.Await(func() {
-		result = <-req.c
-	})
+	result := <-req.c
 	return result.exists, result.err
 }
 
-func (c *dbClient) LoadAll(attrName string) ([]interface {
+func (c *dbClient) loadAll(attrName string) ([]interface {
 	GetAttrID() interface{}
 	GetData() map[string]interface{}
 }, error) {
@@ -235,25 +165,18 @@ func (c *dbClient) LoadAll(attrName string) ([]interface {
 	c.operationQueue.Push(req)
 	c.checkOperationQueueLen()
 
-	var result *loadAllResult
-	evq.Await(func() {
-		result = <-req.c
-	})
+	result := <-req.c
 	return result.datas, result.err
 }
 
-func (c *dbClient) ForEach(attrName string, callback func(attrID interface{}, data map[string]interface{})) {
+func (c *dbClient) forEach(attrName string, callback func(attrID interface{}, data map[string]interface{})) {
 	req := &forEachRequest{attrName: attrName, iter: nil, c: make(chan *forEachResult, 1)}
 
 	for true {
 		c.operationQueue.Push(req)
 		c.checkOperationQueueLen()
 
-		var result *forEachResult
-		evq.Await(func() {
-			result = <-req.c
-		})
-
+		result := <-req.c
 		if result.err != nil {
 			return
 		}
@@ -268,7 +191,7 @@ func (c *dbClient) ForEach(attrName string, callback func(attrID interface{}, da
 func (c *dbClient) checkOperationQueueLen() {
 	qlen := c.operationQueue.Len()
 	if qlen > 100 && qlen%100 == 0 && c.recentWarnedQueueLen != qlen {
-		log.Printf("db %s operation queue length = %d", c.cfg, qlen)
+		log.Printf("db %s operation queue length = %d", c.opt, qlen)
 		c.recentWarnedQueueLen = qlen
 	}
 }
@@ -278,7 +201,7 @@ func (c *dbClient) shutdown() {
 		var waitTime time.Duration
 		for c.operationQueue.Len() > 0 {
 			if waitTime > 10*time.Second {
-				log.Printf("db %s Shutdown timeout, left op %d", c.cfg, c.operationQueue.Len())
+				log.Printf("db %s Shutdown timeout, left op %d", c.opt.format(), c.operationQueue.Len())
 				break
 			}
 			t := 100 * time.Millisecond
@@ -295,9 +218,9 @@ func (c *dbClient) dbRoutine() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			log.Printf("db %s routine paniced: %s", c.cfg, err)
+			log.Printf("db %s routine paniced: %s", c.opt.format(), err)
 		} else {
-			c.dbEngine.Close()
+			c.dbEngine.close()
 			c.dbEngine = nil
 			close(c.shutdownNotify)
 		}
@@ -306,13 +229,13 @@ func (c *dbClient) dbRoutine() {
 	for {
 		err := c.assureDBEngineReady()
 		if err != nil {
-			log.Printf("db %s engine is not ready: %s", c.cfg, err)
+			log.Printf("db %s engine is not ready: %s", c.opt.format(), err)
 			time.Sleep(time.Second)
 			continue
 		}
 
 		if c.dbEngine == nil {
-			log.Fatalf("db %s engine is nil", c.cfg)
+			log.Fatalf("db %s engine is nil", c.opt.format())
 		}
 
 		req := c.operationQueue.Pop()
@@ -330,10 +253,10 @@ func (c *dbClient) dbRoutine() {
 
 		err = req2.execute(c.dbEngine)
 		if err != nil {
-			log.Printf("db: %s %s failed: %s", c.cfg, req2.name(), err)
+			log.Printf("db: %s %s failed: %s", c.opt.format(), req2.name(), err)
 
-			if err != nil && c.dbEngine.IsEOF(err) {
-				c.dbEngine.Close()
+			if err != nil && c.dbEngine.isEOF(err) {
+				c.dbEngine.close()
 				c.dbEngine = nil
 			}
 		}
@@ -344,7 +267,7 @@ func (c *dbClient) dbRoutine() {
 
 type iDbRequest interface {
 	name() string
-	execute(engine iDbEngine) error
+	execute(engine *mongoEngine) error
 }
 
 type saveRequest struct {
@@ -358,8 +281,8 @@ func (r *saveRequest) name() string {
 	return "save"
 }
 
-func (r *saveRequest) execute(engine iDbEngine) error {
-	err := engine.Write(r.attrName, r.attrID, r.data)
+func (r *saveRequest) execute(engine *mongoEngine) error {
+	err := engine.write(r.attrName, r.attrID, r.data)
 	if r.c != nil {
 		r.c <- err
 	}
@@ -376,8 +299,8 @@ func (r *delRequest) name() string {
 	return "del"
 }
 
-func (r *delRequest) execute(engine iDbEngine) error {
-	err := engine.Del(r.attrName, r.attrID)
+func (r *delRequest) execute(engine *mongoEngine) error {
+	err := engine.del(r.attrName, r.attrID)
 	if r.c != nil {
 		r.c <- err
 	}
@@ -399,8 +322,8 @@ func (r *loadRequest) name() string {
 	return "load"
 }
 
-func (r *loadRequest) execute(engine iDbEngine) error {
-	data, err := engine.Read(r.attrName, r.attrID)
+func (r *loadRequest) execute(engine *mongoEngine) error {
+	data, err := engine.read(r.attrName, r.attrID)
 	if err != nil {
 		data = nil
 	}
@@ -429,8 +352,8 @@ func (r *existsRequest) name() string {
 	return "exists"
 }
 
-func (r *existsRequest) execute(engine iDbEngine) error {
-	exists, err := engine.Exists(r.attrName, r.attrID)
+func (r *existsRequest) execute(engine *mongoEngine) error {
+	exists, err := engine.exists(r.attrName, r.attrID)
 	if r.c != nil {
 		r.c <- &existsResult{
 			exists: exists,
@@ -457,8 +380,8 @@ func (r *loadAllRequest) name() string {
 	return "loadAll"
 }
 
-func (r *loadAllRequest) execute(engine iDbEngine) error {
-	datas, err := engine.ReadAll(r.attrName)
+func (r *loadAllRequest) execute(engine *mongoEngine) error {
+	datas, err := engine.readAll(r.attrName)
 	if err != nil {
 		datas = nil
 	}
@@ -489,7 +412,7 @@ func (r *forEachRequest) name() string {
 	return "forEach"
 }
 
-func (r *forEachRequest) execute(engine iDbEngine) error {
+func (r *forEachRequest) execute(engine *mongoEngine) error {
 	var err error
 	var attrID interface{}
 	var data map[string]interface{}
@@ -497,7 +420,7 @@ func (r *forEachRequest) execute(engine iDbEngine) error {
 	if r.iter != nil {
 		attrID, data, hasMore = r.iter()
 	} else {
-		r.iter, err = engine.Query(r.attrName)
+		r.iter, err = engine.query(r.attrName)
 		if err == nil {
 			attrID, data, hasMore = r.iter()
 		}
@@ -523,8 +446,8 @@ func (r *insertRequest) name() string {
 	return "insert"
 }
 
-func (r *insertRequest) execute(engine iDbEngine) error {
-	err := engine.Insert(r.attrName, r.attrID, r.data)
+func (r *insertRequest) execute(engine *mongoEngine) error {
+	err := engine.insert(r.attrName, r.attrID, r.data)
 	if r.c != nil {
 		r.c <- err
 	}

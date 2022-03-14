@@ -19,12 +19,9 @@ import (
 	"github.com/jageros/hawox/errcode"
 	"github.com/jageros/hawox/httpc"
 	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/protos/meta"
-	"github.com/jageros/hawox/protos/pbf"
 	"github.com/nsqio/go-nsq"
 	"math/rand"
 	"sync"
-	"time"
 )
 
 type Producer struct {
@@ -80,43 +77,8 @@ func (p *Producer) connectToNsqd() error {
 	return nil
 }
 
-func (p *Producer) PushProtoMsg(msgId int32, arg interface{}, target *pbf.Target) error {
-	start := time.Now()
-	im, err := meta.GetMeta(msgId)
-	if err != nil {
-		return err
-	}
-	data, err := im.EncodeArg(arg)
-	if err != nil {
-		return err
-	}
-	resp := &pbf.Response{
-		MsgID:   msgId,
-		Code:    errcode.Success.Code(),
-		Payload: data,
-	}
-	data2, err := resp.Marshal()
-	if err != nil {
-		return err
-	}
-	msg := &pbf.QueueMsg{
-		Data:    data2,
-		Targets: target,
-	}
-	err = p.Push(msg)
-	take := time.Now().Sub(start)
-	if take > p.opt.WarnTime {
-		logx.Warnf("Nsq Push Msg take: %s", take.String())
-	}
-	return err
-}
-
-func (p *Producer) Push(msg *pbf.QueueMsg) error {
-	data, err := msg.Marshal()
-	if err != nil {
-		return err
-	}
-	err = p.pd.Publish(p.opt.Topic, data)
+func (p *Producer) Push(data []byte) error {
+	err := p.pd.Publish(p.opt.Topic, data)
 	if err != nil {
 		err = p.connectToNsqd()
 		if err != nil {

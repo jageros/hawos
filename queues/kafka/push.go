@@ -16,12 +16,8 @@ import (
 	"context"
 	"github.com/Shopify/sarama"
 	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/errcode"
 	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/protos/meta"
-	"github.com/jageros/hawox/protos/pbf"
 	"strings"
-	"time"
 )
 
 type Producer struct {
@@ -59,50 +55,10 @@ func NewProducer(g contextx.Context, opfs ...func(cfg *Config)) (*Producer, erro
 	return pd, nil
 }
 
-func (p *Producer) PushProtoMsg(msgId int32, arg interface{}, target *pbf.Target) error {
-	start := time.Now()
-	im, err := meta.GetMeta(msgId)
-	if err != nil {
-		return err
-	}
-	data, err := im.EncodeArg(arg)
-	if err != nil {
-		return err
-	}
-	resp := &pbf.Response{
-		MsgID:   msgId,
-		Code:    errcode.Success.Code(),
-		Payload: data,
-	}
-
-	msgData, err := resp.Marshal()
-	if err != nil {
-		return err
-	}
-
-	msg := &pbf.QueueMsg{
-		Data:    msgData,
-		Targets: target,
-	}
-
-	err = p.Push(msg)
-	end := time.Now()
-	take := end.Sub(start)
-	if take > p.cfg.WarnTime {
-		logx.Warnf("Kafka Push Msg take: %s", take.String())
-	}
-	return err
-}
-
-func (p *Producer) Push(msg *pbf.QueueMsg) error {
-	byData, err := msg.Marshal()
-	if err != nil {
-		return err
-	}
-
+func (p *Producer) Push(data []byte) error {
 	msg_ := &sarama.ProducerMessage{
 		Topic: p.cfg.Topic,
-		Value: sarama.ByteEncoder(byData),
+		Value: sarama.ByteEncoder(data),
 	}
 	p.ctx.Go(func(ctx context.Context) error {
 		select {
@@ -133,7 +89,6 @@ func (p *Producer) run() {
 
 			case msg := <-p.pd.Successes():
 				offset = msg.Offset
-				//logx.Debugf("kafka successful partition=%d offset=%d", msg.Partition, msg.Offset)
 			}
 		}
 	})

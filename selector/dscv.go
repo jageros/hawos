@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/protoc"
 	"github.com/jageros/hawox/uuid"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
@@ -73,11 +72,6 @@ func (r *Registry) run() {
 			return err
 		}
 
-		err = r.Register()
-		if err != nil {
-			return err
-		}
-
 		for {
 			select {
 			case <-ctx.Done():
@@ -129,8 +123,7 @@ func Initialize(ctx contextx.Context, client *clientv3.Client, opts ...Option) (
 	return
 }
 
-func (r *Registry) Register() error {
-	msgIds := protoc.MsgIDs()
+func (r *Registry) Register(msgIds []int32) error {
 	if len(msgIds) <= 0 {
 		return nil
 	}

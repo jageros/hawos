@@ -1,4 +1,4 @@
-package attribute
+package mgoattr
 
 type iAttr interface {
 	SetDirty(val bool)
@@ -14,7 +14,6 @@ type baseAttr struct {
 	i      iAttr
 	parent iAttr
 	pkey   interface{} // key of this item in parent
-	//path   []interface{}
 	root  iAttr
 	dirty bool
 }

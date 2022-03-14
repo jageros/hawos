@@ -15,7 +15,6 @@ package queues
 import (
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/protos/pbf"
 	"github.com/jageros/hawox/queues/kafka"
 	"github.com/jageros/hawox/queues/nsq"
 	"time"
@@ -70,12 +69,11 @@ func defaultConfig() *Config {
 }
 
 type IProducer interface {
-	PushProtoMsg(msgId int32, arg interface{}, target *pbf.Target) error
-	Push(msg *pbf.QueueMsg) error
+	Push(data []byte) error
 }
 
 type IConsumer interface {
-	OnMessageHandler(f func(msg *pbf.QueueMsg))
+	OnMessageHandler(f func(data []byte))
 }
 
 func NewProducer(ctx contextx.Context, opfs ...func(cfg *Config)) (IProducer, error) {

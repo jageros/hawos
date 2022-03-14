@@ -17,7 +17,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/protos/pbf"
 	"strings"
 	"time"
 )
@@ -26,10 +25,10 @@ type Consumer struct {
 	ctx     contextx.Context
 	cg      sarama.ConsumerGroup
 	cfg     *Config
-	handler func(msg *pbf.QueueMsg)
+	handler func(data []byte)
 }
 
-func (c *Consumer) OnMessageHandler(f func(msg *pbf.QueueMsg)) {
+func (c *Consumer) OnMessageHandler(f func(data []byte)) {
 	c.handler = f
 }
 
@@ -37,7 +36,7 @@ func NewConsumer(ctx contextx.Context, opfs ...func(cfg *Config)) (*Consumer, er
 	csr := &Consumer{
 		ctx: ctx,
 		cfg: defaultConfig(),
-		handler: func(msg *pbf.QueueMsg) {
+		handler: func(data []byte) {
 			logx.Warnf("Kafka Consumer receive msg, but handler not set")
 		},
 	}
@@ -101,14 +100,8 @@ func (c *Consumer) ConsumeClaim(assignment sarama.ConsumerGroupSession, claim sa
 			logx.Infof("kafka ConsumeClaim recv msg=nil")
 			continue
 		}
-		kmsg := &pbf.QueueMsg{}
-		err := kmsg.Unmarshal(msg.Value)
-		if err != nil {
-			logx.Errorf("kafka Unmarshal msg err=%v", err)
-			continue
-		}
 
-		c.handler(kmsg)
+		c.handler(msg.Value)
 
 		assignment.MarkMessage(msg, "") // 确认消息
 		take := time.Now().Sub(start)

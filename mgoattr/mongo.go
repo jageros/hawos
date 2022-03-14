@@ -1,4 +1,4 @@
-package mongo
+package mgoattr
 
 import (
 	"context"
@@ -23,14 +23,14 @@ func (ad *attrData) GetData() map[string]interface{} {
 	return ad.data
 }
 
-type MongoDBEngine struct {
+type mongoEngine struct {
 	session  *mgo.Session
 	database string
 	ctx      contextx.Context
 	cancel   contextx.CancelFunc
 }
 
-func OpenMongoDB(addr, dbname, user, passowrd string) (*MongoDBEngine, error) {
+func openMongoDB(addr, dbname, user, passowrd string) (*mongoEngine, error) {
 	log.Printf("Connecting MongoDB %s ...", addr)
 	session, err := mgo.Dial("mongodb://" + addr + "/")
 	if err != nil {
@@ -69,7 +69,7 @@ func OpenMongoDB(addr, dbname, user, passowrd string) (*MongoDBEngine, error) {
 		}
 	})
 
-	return &MongoDBEngine{
+	return &mongoEngine{
 		session:  session,
 		database: dbname,
 		ctx:      ctx,
@@ -77,7 +77,7 @@ func OpenMongoDB(addr, dbname, user, passowrd string) (*MongoDBEngine, error) {
 	}, nil
 }
 
-func (e *MongoDBEngine) Write(attrName string, attrID interface{}, data map[string]interface{}) error {
+func (e *mongoEngine) write(attrName string, attrID interface{}, data map[string]interface{}) error {
 	col := e.getCollection(attrName)
 	_, err := col.UpsertId(attrID, bson.M{
 		"data": data,
@@ -87,14 +87,14 @@ func (e *MongoDBEngine) Write(attrName string, attrID interface{}, data map[stri
 	return err
 }
 
-func (e *MongoDBEngine) Insert(attrName string, attrID interface{}, data map[string]interface{}) error {
+func (e *mongoEngine) insert(attrName string, attrID interface{}, data map[string]interface{}) error {
 	col := e.getCollection(attrName)
 	err := col.Insert(bson.M{"_id": attrID, "data": data})
 	col.Database.Session.Close()
 	return err
 }
 
-func (e *MongoDBEngine) Query(attrName string) (func() (attrID interface{}, data map[string]interface{}, hasMore bool), error) {
+func (e *mongoEngine) query(attrName string) (func() (attrID interface{}, data map[string]interface{}, hasMore bool), error) {
 	col := e.session.DB(e.database).C(attrName)
 	iter := col.Find(nil).Iter()
 	return func() (attrID interface{}, data map[string]interface{}, hasMore bool) {
@@ -108,7 +108,7 @@ func (e *MongoDBEngine) Query(attrName string) (func() (attrID interface{}, data
 	}, nil
 }
 
-func (e *MongoDBEngine) Read(attrName string, attrID interface{}) (map[string]interface{}, error) {
+func (e *mongoEngine) read(attrName string, attrID interface{}) (map[string]interface{}, error) {
 	col := e.getCollection(attrName)
 	q := col.FindId(attrID)
 	var doc bson.M
@@ -124,13 +124,13 @@ func (e *MongoDBEngine) Read(attrName string, attrID interface{}) (map[string]in
 	return e.convertM2Map(doc["data"].(bson.M)), nil
 }
 
-func (e *MongoDBEngine) convertM2Map(m bson.M) map[string]interface{} {
+func (e *mongoEngine) convertM2Map(m bson.M) map[string]interface{} {
 	ma := map[string]interface{}(m)
 	e.convertM2MapInMap(ma)
 	return ma
 }
 
-func (e *MongoDBEngine) convertM2MapInMap(m map[string]interface{}) {
+func (e *mongoEngine) convertM2MapInMap(m map[string]interface{}) {
 	for k, v := range m {
 		switch im := v.(type) {
 		case bson.M:
@@ -143,7 +143,7 @@ func (e *MongoDBEngine) convertM2MapInMap(m map[string]interface{}) {
 	}
 }
 
-func (e *MongoDBEngine) convertM2MapInList(l []interface{}) {
+func (e *mongoEngine) convertM2MapInList(l []interface{}) {
 	for i, v := range l {
 		switch im := v.(type) {
 		case bson.M:
@@ -156,12 +156,12 @@ func (e *MongoDBEngine) convertM2MapInList(l []interface{}) {
 	}
 }
 
-func (e *MongoDBEngine) getCollection(attrName string) *mgo.Collection {
+func (e *mongoEngine) getCollection(attrName string) *mgo.Collection {
 	ses := e.session.Copy()
 	return ses.DB(e.database).C(attrName)
 }
 
-func (e *MongoDBEngine) Exists(attrName string, attrID interface{}) (bool, error) {
+func (e *mongoEngine) exists(attrName string, attrID interface{}) (bool, error) {
 	col := e.getCollection(attrName)
 	query := col.FindId(attrID)
 	var doc bson.M
@@ -178,24 +178,24 @@ func (e *MongoDBEngine) Exists(attrName string, attrID interface{}) (bool, error
 	}
 }
 
-func (e *MongoDBEngine) Close() {
+func (e *mongoEngine) close() {
 	e.cancel()
 	e.session.Close()
 	e.ctx.Wait()
 }
 
-func (e *MongoDBEngine) IsEOF(err error) bool {
+func (e *mongoEngine) isEOF(err error) bool {
 	return err == io.EOF || err == io.ErrUnexpectedEOF
 }
 
-func (e *MongoDBEngine) Del(attrName string, attrID interface{}) error {
+func (e *mongoEngine) del(attrName string, attrID interface{}) error {
 	col := e.getCollection(attrName)
 	err := col.RemoveId(attrID)
 	col.Database.Session.Close()
 	return err
 }
 
-func (e *MongoDBEngine) ReadAll(attrName string) ([]interface {
+func (e *mongoEngine) readAll(attrName string) ([]interface {
 	GetAttrID() interface{}
 	GetData() map[string]interface{}
 }, error) {

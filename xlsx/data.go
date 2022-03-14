@@ -14,9 +14,9 @@ package xlsx
 
 import (
 	"context"
-	"github.com/jageros/hawox/attribute"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
+	attribute "github.com/jageros/hawox/mgoattr"
 	"github.com/jageros/hawox/redis"
 )
 

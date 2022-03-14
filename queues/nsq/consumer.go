@@ -16,7 +16,6 @@ import (
 	"context"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/protos/pbf"
 	"github.com/nsqio/go-nsq"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ type Consumer struct {
 	ctx     contextx.Context
 	cfg     *Config
 	csr     *nsq.Consumer
-	handler func(msg *pbf.QueueMsg)
+	handler func(data []byte)
 	csrCnt  int64
 }
 
@@ -34,7 +33,7 @@ func NewConsumer(ctx contextx.Context, opfs ...func(cfg *Config)) (*Consumer, er
 	c := &Consumer{
 		ctx: ctx,
 		cfg: defaultConfig(),
-		handler: func(msg *pbf.QueueMsg) {
+		handler: func(data []byte) {
 			logx.Warnf("Nsq Consumer receive msg, but handler not set!")
 		},
 	}
@@ -63,26 +62,20 @@ func NewConsumer(ctx contextx.Context, opfs ...func(cfg *Config)) (*Consumer, er
 	return c, err
 }
 
-func (c *Consumer) OnMessageHandler(f func(msg *pbf.QueueMsg)) {
+func (c *Consumer) OnMessageHandler(f func(data []byte)) {
 	c.handler = f
 }
 
 func (c *Consumer) HandleMessage(msg *nsq.Message) error {
 	start := time.Now()
-	arg := &pbf.QueueMsg{}
-	err := arg.Unmarshal(msg.Body)
-	if err != nil {
-		logx.Errorf("Nsq Consumer Unmarshal err: %v", err)
-		return err
-	}
 
-	c.handler(arg)
+	c.handler(msg.Body)
 
 	take := time.Now().Sub(start)
 	if take > c.cfg.WarnTime {
 		logx.Warnf("Nsq Consumer Msg take: %s", take.String())
 	}
-	return err
+	return nil
 }
 
 func (c *Consumer) run() {
