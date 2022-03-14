@@ -168,12 +168,10 @@ func BroadcastBinary(data []byte, filter *Filter) error {
 
 func Init(ctx contextx.Context, r *gin.RouterGroup, opfs ...func(opt Options)) {
 	ss = &service{
-		ctx:         ctx,
-		m:           melody.New(),
-		callTimeout: time.Second * 5,
-		//auth:         jwt.CheckToken,
-		//Keys:         []string{"uid", "roomId"},
-		relativePath: "/gate",
+		ctx:          ctx,
+		m:            melody.New(),
+		callTimeout:  time.Second * 5,
+		relativePath: "/ws",
 	}
 	for _, opf := range opfs {
 		opf(ss)
