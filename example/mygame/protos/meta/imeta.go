@@ -9,56 +9,64 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/jageros/hawox/example/mygame/protos/meta/sess"
+	"git.hawtech.cn/jager/hawox/example/mygame/protos/meta/sess"
 
-	pb "github.com/jageros/hawox/example/mygame/protos/pb"
+	pb "git.hawtech.cn/jager/hawox/example/mygame/protos/pb"
 )
 
-var metaData = make(map[pb.MsgID]IMeta)
+var metaData = make(map[pb.MsgID]iMeta)
 
-var NoMetaErr = errors.New("NoMetaErr")
+var NotRegistryMetaErr = errors.New("NotRegistryMetaErr")
 
-type IMeta interface {
-	GetMsgID() pb.MsgID
-	EncodeArg(interface{}) ([]byte, error)
-	DecodeArg([]byte) (interface{}, error)
-	EncodeReply(interface{}) ([]byte, error)
-	DecodeReply([]byte) (interface{}, error)
-	Handle(session sess.ISession, arg interface{}) (interface{}, error)
+type iMeta interface {
+	getMsgID() pb.MsgID
+	encodeArg(interface{}) ([]byte, error)
+	decodeArg([]byte) (interface{}, error)
+	encodeReply(interface{}) ([]byte, error)
+	decodeReply([]byte) (interface{}, error)
+	handle(session sess.ISession, arg interface{}) (interface{}, error)
 }
 
-func registerMeta(meta IMeta) {
-	metaData[meta.GetMsgID()] = meta
+func registerMeta(meta iMeta) {
+	metaData[meta.getMsgID()] = meta
 }
 
-func GetMeta(msgId pb.MsgID) (IMeta, error) {
+func getMeta(msgId pb.MsgID) (iMeta, error) {
 	if m, ok := metaData[msgId]; ok {
 		return m, nil
 	} else {
-		return nil, NoMetaErr
+		return nil, NotRegistryMetaErr
 	}
 }
 
+func AllRegisteredMsgid() []int32 {
+	var msgids []int32
+	for id := range metaData {
+		msgids = append(msgids, int32(id))
+	}
+	return msgids
+}
+
 func Call(session sess.ISession, msgid pb.MsgID, data []byte) ([]byte, error) {
-	im, err := GetMeta(msgid)
+	im, err := getMeta(msgid)
 	if err != nil {
 		return nil, err
 	}
-	arg, err := im.DecodeArg(data)
+	arg, err := im.decodeArg(data)
 	if err != nil {
 		return nil, err
 	}
 	
 	var resp interface{}
 	err = catchPanic(func() error {
-		resp, err = im.Handle(session, arg)
+		resp, err = im.handle(session, arg)
 		return err
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return im.EncodeReply(resp)
+	return im.encodeReply(resp)
 }
 
 func catchPanic(f func() error) (err error) {

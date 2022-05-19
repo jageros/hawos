@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jageros/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/contextx"
 	"github.com/xiaonanln/go-xnsyncutil/xnsyncutil"
 )
 

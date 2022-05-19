@@ -3,8 +3,8 @@ package timer
 import (
 	"container/heap"
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/evq"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/evq"
 	"sync"
 	"time"
 )
@@ -252,6 +252,7 @@ func Initialize(ctx contextx.Context) {
 		evq.HandleEvent(eventId, onTimer)
 		ctx.Go(func(ctx context.Context) error {
 			tk := time.NewTicker(time.Millisecond * 200)
+			defer tk.Stop()
 			for {
 				select {
 				case <-ctx.Done():

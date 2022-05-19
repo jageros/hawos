@@ -34,6 +34,6 @@ func (s *Session) GetClientId() int64 {
 	return s.ClientId
 }
 
-func (s *Session) GetGateId() int64 {
+func (s *Session) GetGid() int64 {
 	return s.GateId
 }

@@ -13,10 +13,10 @@
 package ws
 
 import (
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/httpx"
 	"github.com/gin-gonic/gin"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/httpx"
 	"gopkg.in/olahol/melody.v1"
 	"time"
 )
@@ -28,11 +28,21 @@ type Options interface {
 	SetRelativePath(relativePath string)
 	SetKeys(keys ...string)
 	SetAuth(auth func(c *gin.Context))
+
+	HandleConnect(fn func(*melody.Session))
+	HandleDisconnect(fn func(*melody.Session))
+	HandlePong(fn func(*melody.Session))
+	HandleMessage(fn func(*melody.Session, []byte))
+	HandleMessageBinary(fn func(*melody.Session, []byte))
+	HandleSentMessage(fn func(*melody.Session, []byte))
+	HandleSentMessageBinary(fn func(*melody.Session, []byte))
+	HandleError(fn func(*melody.Session, error))
+	HandleClose(fn func(*melody.Session, int, string) error)
 }
 
 type service struct {
+	*melody.Melody
 	ctx          contextx.Context
-	m            *melody.Melody
 	callTimeout  time.Duration
 	relativePath string
 	keys         []string
@@ -92,28 +102,12 @@ func (s *service) SetAuth(auth func(c *gin.Context)) {
 	s.auth = auth
 }
 
-func OnMessage(fn func(session *melody.Session, bytes []byte)) {
-	ss.m.HandleMessage(fn)
-}
-
-func OnMessageBinary(fn func(session *melody.Session, bytes []byte)) {
-	ss.m.HandleMessageBinary(fn)
-}
-
-func OnConnect(fn func(*melody.Session)) {
-	ss.m.HandleConnect(fn)
-}
-
-func OnDisConnect(fn func(*melody.Session)) {
-	ss.m.HandleDisconnect(fn)
-}
-
 func Broadcast(data []byte, filter *Filter) error {
 	if filter == nil {
-		return ss.m.Broadcast(data)
+		return ss.Broadcast(data)
 	}
 
-	return ss.m.BroadcastFilter(data, func(session *melody.Session) bool {
+	return ss.BroadcastFilter(data, func(session *melody.Session) bool {
 
 		if filter.isRefused {
 			for k, v := range session.Keys {
@@ -140,10 +134,10 @@ func Broadcast(data []byte, filter *Filter) error {
 
 func BroadcastBinary(data []byte, filter *Filter) error {
 	if filter == nil {
-		return ss.m.BroadcastBinary(data)
+		return ss.BroadcastBinary(data)
 	}
 
-	return ss.m.BroadcastBinaryFilter(data, func(session *melody.Session) bool {
+	return ss.BroadcastBinaryFilter(data, func(session *melody.Session) bool {
 
 		if filter.isRefused {
 			for k, v := range session.Keys {
@@ -168,8 +162,8 @@ func BroadcastBinary(data []byte, filter *Filter) error {
 
 func Init(ctx contextx.Context, r *gin.RouterGroup, opfs ...func(opt Options)) {
 	ss = &service{
+		Melody:       melody.New(),
 		ctx:          ctx,
-		m:            melody.New(),
 		callTimeout:  time.Second * 5,
 		relativePath: "/ws",
 	}
@@ -204,7 +198,7 @@ func (s *service) handler(c *gin.Context) {
 		}
 	}
 
-	err := s.m.HandleRequestWithKeys(c.Writer, c.Request, keys)
+	err := s.HandleRequestWithKeys(c.Writer, c.Request, keys)
 	if err != nil {
 		httpx.ErrInterrupt(c, errcode.WithErrcode(-1, err))
 	}

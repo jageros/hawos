@@ -15,9 +15,9 @@ package wxmini
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jageros/hawox/encrypt"
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/encrypt"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/logx"
 	"io/ioutil"
 	"net/http"
 )
@@ -101,7 +101,7 @@ func getUserInfo(rawData string) (*UserInfo, error) {
 	u := &UserInfo{}
 	err := json.Unmarshal([]byte(rawData), u)
 	if err != nil {
-		logx.Infof("login json.Unmarshal err=%v", err)
+		logx.Err(err).Msg("login json.Unmarshal")
 		return nil, err
 	}
 	return u, nil
@@ -138,7 +138,7 @@ func GetOpenId(wxAppId, wxAppSecret, code string) (openId string, err error) {
 			err = err1
 			return
 		}
-		logx.Errorf("GetMiniOpenId ErrMsg=%s", uSess.Errmsg)
+		logx.Error().Int("ErrCode", uSess.Errcode).Str("ErrMsg", uSess.Errmsg).Msg("GetMiniOpenId")
 		err = errcode.New(int32(uSess.Errcode), uSess.Errmsg)
 		return
 	}

@@ -15,8 +15,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/mgoattr"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/mgoattr"
 	"sync"
 	"time"
 )

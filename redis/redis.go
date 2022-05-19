@@ -16,14 +16,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/recovers"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/recovers"
 
 	"strings"
 	"time"
 
+	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/go-redis/redis/v8"
-	"github.com/jageros/hawox/logx"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	zredis "github.com/zeromicro/go-zero/core/stores/redis"
 )
@@ -91,9 +91,9 @@ func Initialize(ctx contextx.Context, opfs ...func(rdb RdbConfig)) {
 			case <-ctx.Done():
 				err := RDB.Close()
 				if err != nil {
-					logx.Infof("Redis Close err: %v", err)
+					logx.Err(err).Msg("RedisClose")
 				} else {
-					logx.Infof("Redis Close successful!")
+					logx.Info().Msg("Redis Close successful!")
 				}
 				return ctx.Err()
 			case <-tk.C:

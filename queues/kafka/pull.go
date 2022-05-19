@@ -14,9 +14,9 @@ package kafka
 
 import (
 	"context"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/Shopify/sarama"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
 	"strings"
 	"time"
 )
@@ -37,7 +37,7 @@ func NewConsumer(ctx contextx.Context, opfs ...func(cfg *Config)) (*Consumer, er
 		ctx: ctx,
 		cfg: defaultConfig(),
 		handler: func(data []byte) {
-			logx.Warnf("Kafka Consumer receive msg, but handler not set")
+			logx.Warn().Msg("Kafka Consumer receive msg, but handler not set")
 		},
 	}
 
@@ -82,7 +82,7 @@ func (c *Consumer) run() {
 			default:
 				err := c.cg.Consume(ctx, []string{c.cfg.Topic}, c)
 				if err != nil {
-					logx.Errorf("Consume err: %v", err)
+					logx.Err(err).Msg("kafka consume")
 					return err
 				}
 			}
@@ -97,7 +97,7 @@ func (c *Consumer) ConsumeClaim(assignment sarama.ConsumerGroupSession, claim sa
 	for msg := range claim.Messages() {
 		start := time.Now()
 		if msg == nil {
-			logx.Infof("kafka ConsumeClaim recv msg=nil")
+			logx.Info().Msg("kafka ConsumeClaim recv msg=nil")
 			continue
 		}
 
@@ -106,7 +106,7 @@ func (c *Consumer) ConsumeClaim(assignment sarama.ConsumerGroupSession, claim sa
 		assignment.MarkMessage(msg, "") // 确认消息
 		take := time.Now().Sub(start)
 		if take >= c.cfg.WarnTime {
-			logx.Warnf("kafka consume msg take %s", take.String())
+			logx.Warn().Str("take", take.String()).Msg("kafka consume msg")
 		}
 	}
 	return nil

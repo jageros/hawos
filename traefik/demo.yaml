@@ -1,0 +1,21 @@
+http:
+  # 添加路由
+  routers:
+    logs:
+      entryPoints:
+        - http
+        - https
+      service: service-logs
+      rule: PathPrefix(`/ts`)
+
+  # 添加服务
+  services:
+    service-logs:
+      loadBalancer:
+        servers:
+          - url: http://192.168.31.89:7777
+          - url: http://192.168.31.89:8888
+          - url: http://192.168.31.89:9999
+        passHostHeader: true
+        healthcheck:
+          path: /ts/healthcheck

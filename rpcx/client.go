@@ -15,15 +15,15 @@ package rpcx
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/contextx"
 	"google.golang.org/grpc/resolver"
 	"sync"
 	"time"
 
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/registry"
-	"github.com/jageros/hawox/resolver/discovery"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/registry"
+	"git.hawtech.cn/jager/hawox/resolver/discovery"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/connectivity"
@@ -170,8 +170,8 @@ func (c *client) call(cc *grpc.ClientConn, rpcFn RpcFn) errcode.IErr {
 		rpcFn(cc)
 		return nil
 	} else {
+		logx.Error().Str("target", cc.Target()).Msg("Service Conn NotReady!")
 		errMsg := fmt.Sprintf("%s Service Conn NotReady!", cc.Target())
-		logx.Errorf(errMsg)
 		return errcode.New(-22, errMsg)
 	}
 }
@@ -179,7 +179,7 @@ func (c *client) call(cc *grpc.ClientConn, rpcFn RpcFn) errcode.IErr {
 func CallByName(serviceName string, rpcFn RpcFn) errcode.IErr {
 	cc, err := cli.getConnByName(serviceName)
 	if err != nil {
-		logx.Errorf("CallByName getConnByName err: %v", err)
+		logx.Err(err).Msg("CallByName getConnByName")
 		return errcode.WithErrcode(-11, err)
 	}
 

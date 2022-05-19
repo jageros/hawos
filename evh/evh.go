@@ -1,8 +1,8 @@
 package evh
 
 import (
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/recovers"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/recovers"
 )
 
 var (
@@ -54,9 +54,7 @@ func Publish(eventID int, args ...interface{}) {
 			l.handler(args...)
 			return nil
 		})
-		if err != nil {
-			logx.Infof("[eventhub] eventId=%d, seq=%d, handle err=%v", eventID, l.seq, err)
-		}
+		logx.Err(err).Int("evid", eventID).Int("seq", l.seq).Msg("EventPublish")
 	}
 }
 

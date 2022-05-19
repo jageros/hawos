@@ -29,6 +29,7 @@ func TestGo(t *testing.T) {
 
 	ctx.Go(func(ctx context.Context) error {
 		tk := time.NewTimer(time.Second * 10)
+		defer tk.Stop()
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

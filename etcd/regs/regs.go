@@ -14,8 +14,8 @@ package regs
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"math/rand"
 	"sort"
@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	prefix = "/global"
+	prefix = "global"
 	ttl    = time.Second * 15
 )
 
@@ -65,11 +65,7 @@ func (r *Registry) key(key string) string {
 }
 
 func (r *Registry) SetNamespace(namespace string) {
-	if strings.HasPrefix(namespace, "/") {
-		r.namespace = namespace
-	} else {
-		r.namespace = "/" + namespace
-	}
+	r.namespace = namespace
 }
 
 func (r *Registry) SetTTL(t time.Duration) {
@@ -173,7 +169,7 @@ func (r *Registry) watch() {
 					case clientv3.EventTypeDelete:
 						r.del(string(ev.Kv.Key))
 					}
-					logx.Infof("Event Type=%s key=%s value=%s", ev.Type.String(), string(ev.Kv.Key), string(ev.Kv.Value))
+					logx.Info().Str("type", ev.Type.String()).Str(string(ev.Kv.Key), string(ev.Kv.Value)).Msg("RegistryEvent")
 				}
 			}
 		}

@@ -15,6 +15,7 @@ package metatemp
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -52,14 +53,14 @@ func metaHandle(req, resp string) string {
 func metaHandleFunc(req, resp string) string {
 	if req == "" || req == "nil" || req == "null" {
 		if resp == "" || resp == "nil" || resp == "null" {
-			return "nil, m.handle(ss)"
+			return "nil, m.handleFn(ss)"
 		} else {
-			return "m.handle(ss)"
+			return "m.handleFn(ss)"
 		}
 	} else if resp == "" || resp == "nil" || resp == "null" {
-		return fmt.Sprintf("nil, m.handle(ss, arg.(*pb.%s))", req)
+		return fmt.Sprintf("nil, m.handleFn(ss, arg.(*pb.%s))", req)
 	} else {
-		return fmt.Sprintf("m.handle(ss, arg.(*pb.%s))", req)
+		return fmt.Sprintf("m.handleFn(ss, arg.(*pb.%s))", req)
 	}
 }
 
@@ -74,18 +75,19 @@ var %s = &meta_%s{}
 // implement IMeta
 
 type meta_%s struct {
-	handle %s
+	handleFn %s
 }
 
 func (m *meta_%s) RegistryHandle(f %s) {
-	m.handle = f
+	m.handleFn = f
+	registerMeta(m)
 }
 
-func (m *meta_%s) Handle(ss sess.ISession, arg interface{}) (interface{}, error) {
+func (m *meta_%s) handle(ss sess.ISession, arg interface{}) (interface{}, error) {
 	return %s
 }
 
-func (m *meta_%s) GetMsgID() pb.%s {
+func (m *meta_%s) getMsgID() pb.%s {
 	return pb.%s_%s
 }
 `
@@ -96,14 +98,14 @@ func (m *meta_%s) GetMsgID() pb.%s {
 func EncodeArg(msgId, req string) string {
 	if req == "nil" || req == "" || req == "null" {
 		return fmt.Sprintf(`
-func (m *meta_%s) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_%s) encodeArg(arg interface{}) ([]byte, error) {
 		return nil, nil
 }
 `, msgId)
 	}
 
 	return fmt.Sprintf(`
-func (m *meta_%s) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_%s) encodeArg(arg interface{}) ([]byte, error) {
 	_arg, ok := arg.(*pb.%s)
 	if !ok {
 		p, ok := arg.([]byte)
@@ -122,14 +124,14 @@ func (m *meta_%s) EncodeArg(arg interface{}) ([]byte, error) {
 func DecodeArg(msgId, req string) string {
 	if req == "nil" || req == "" || req == "null" {
 		return fmt.Sprintf(`
-func (m *meta_%s) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_%s) decodeArg(data []byte) (interface{}, error) {
 	return nil, nil
 }
 `, msgId)
 	}
 
 	return fmt.Sprintf(`
-func (m *meta_%s) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_%s) decodeArg(data []byte) (interface{}, error) {
 	arg := &pb.%s{}
 	if err := arg.Unmarshal(data); err != nil {
 		return nil, err
@@ -143,13 +145,13 @@ func (m *meta_%s) DecodeArg(data []byte) (interface{}, error) {
 func EncodeReply(msgId, resp string) string {
 	if resp == "" || resp == "nil" || resp == "null" || resp == "ok" {
 		return fmt.Sprintf(`
-func (m *meta_%s) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_%s) encodeReply(reply interface{}) ([]byte, error) {
 	return nil, nil
 }
 `, msgId)
 	}
 	return fmt.Sprintf(`
-func (m *meta_%s) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_%s) encodeReply(reply interface{}) ([]byte, error) {
 	_reply, ok := reply.(*pb.%s)
 	if !ok {
 		p, ok := reply.([]byte)
@@ -168,14 +170,14 @@ func (m *meta_%s) EncodeReply(reply interface{}) ([]byte, error) {
 func DecodeReply(msgId, resp string) string {
 	if resp == "" || resp == "nil" || resp == "null" || resp == "ok" {
 		return fmt.Sprintf(`
-func (m *meta_%s) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_%s) decodeReply(data []byte) (interface{}, error) {
 	return nil, nil
 }
 `, msgId)
 	}
 
 	return fmt.Sprintf(`
-func (m *meta_%s) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_%s) decodeReply(data []byte) (interface{}, error) {
 	reply := &pb.%s{}
 	if err := reply.Unmarshal(data); err != nil {
 		return nil, err
@@ -220,6 +222,7 @@ func GenMetaFile(fileName, pbPkg, sessPkg, enumName string, rpcInfos []string) (
 	var allMsgId []string
 	for _, ri := range rpcInfos {
 		if strings.Contains(ri, "//@") {
+			log.Printf("[Parse] RpcComment: %s", ri)
 			strs := splitByExtraSpace(ri)
 			var msgid, req, resp string
 			for i := 0; i+1 < len(strs); i += 2 {

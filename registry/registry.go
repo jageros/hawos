@@ -3,7 +3,7 @@ package registry
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/logx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )
@@ -99,7 +99,7 @@ func (r *Registry) Register(ctx context.Context, service *ServiceInstance) error
 			}
 		}
 	}()
-	logx.Infof("register Service Type=%s Name=%s ID=%s", service.Type, service.Name, service.ID)
+	logx.Info().Str("type", service.Type).Str("name", service.Name).Str("id", service.ID).Msg("register Service")
 	return nil
 }
 
@@ -112,7 +112,7 @@ func (r *Registry) Deregister(ctx context.Context, service *ServiceInstance) err
 	}()
 	key := service.Key(r.opts.namespace)
 	_, err := r.client.Delete(ctx, key)
-	logx.Infof("deregister service Type=%s Name=%s ID=%s", service.Type, service.Name, service.ID)
+	logx.Info().Str("type", service.Type).Str("name", service.Name).Str("id", service.ID).Msg("deregister service")
 	return err
 }
 

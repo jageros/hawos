@@ -2,8 +2,8 @@ package wsc
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	"net/http"
 	"sync"
 	"time"
@@ -221,9 +221,7 @@ func (m *Melody) ConnectWithHeader(addr string, header http.Header, keys ...map[
 	})
 	m.ctx.Go(func(_ context.Context) error {
 		err := ctx_.Wait()
-		if err != nil {
-			logx.Errorf("session ctx done err: %v", err)
-		}
+		logx.Err(err).Msg("session ctx done")
 		return nil
 	})
 

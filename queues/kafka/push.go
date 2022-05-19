@@ -14,9 +14,9 @@ package kafka
 
 import (
 	"context"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/Shopify/sarama"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
 	"strings"
 )
 
@@ -85,7 +85,7 @@ func (p *Producer) run() {
 					p.pd.Input() <- errMsg.Msg
 					offset = errMsg.Msg.Offset
 				}
-				logx.Infof("Kafka Error Msg: %v", errMsg.Err)
+				logx.Err(errMsg).Msg("Kafka Handle Err")
 
 			case msg := <-p.pd.Successes():
 				offset = msg.Offset

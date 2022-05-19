@@ -14,8 +14,8 @@ package udpx
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	"net"
 	"time"
 )
@@ -78,10 +78,10 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 
 	ctx.Go(func(ctx_ context.Context) error {
 		conn, err := net.ListenUDP("udp", s.LAddr)
+		logx.Err(err).Str("addr", s.LAddr.String()).Msg("UDP listening")
 		if err != nil {
 			return err
 		}
-		logx.Infof("UDP listen addr=%s", s.LAddr.String())
 		ctx.Go(func(ctx context.Context) error {
 			<-ctx.Done()
 			close(msgCh)
@@ -101,11 +101,9 @@ func Init(ctx contextx.Context, ops ...func(opt *Option)) error {
 					}
 					if err == nil {
 						_, err = conn.WriteToUDP(m.data, m.rAddr)
-						if err != nil {
-							logx.Infof("conn.WriteToUDP err=%v", err)
-						}
-					} else {
-						logx.Infof("conn.SetWriteDeadline err=%v", err)
+					}
+					if err != nil {
+						logx.Err(err).Send()
 					}
 				}
 			}

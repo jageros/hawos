@@ -13,9 +13,8 @@
 package httpx
 
 import (
+	"git.hawtech.cn/jager/hawox/errcode"
 	"github.com/gin-gonic/gin"
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/logx"
 	"net/http"
 )
 
@@ -58,7 +57,18 @@ func PkgMsgWrite(c *gin.Context, data interface{}) {
 }
 
 func ErrInterrupt(c *gin.Context, err errcode.IErr) {
-	logx.Errorf("ErrorInterrupt %s", err.Error())
 	c.JSON(http.StatusOK, gin.H{"code": err.Code(), "msg": err.ErrMsg()})
 	c.Abort()
+	c.Error(err)
+}
+
+func HasErr(c *gin.Context, errs ...error) bool {
+	err := errcode.Errors(errs...)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 500, "msg": err.Error()})
+		c.Abort()
+		c.Error(err)
+		return true
+	}
+	return false
 }

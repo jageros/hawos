@@ -2,7 +2,7 @@ package mgoattr
 
 import (
 	"errors"
-	"github.com/jageros/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/contextx"
 )
 
 var (

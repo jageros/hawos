@@ -14,8 +14,8 @@ package encrypt
 
 import (
 	"fmt"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/rsa"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/rsa"
 	"testing"
 )
 
@@ -24,12 +24,12 @@ func Test_Encrypt(t *testing.T) {
 	fmt.Printf("源数据：%v 长度=%d\n", []byte(str), len(str))
 	bt, err := rsa.DefaultEncrypt([]byte(str))
 	if err != nil {
-		logx.Fatal(err)
+		logx.Fatal().Err(err).Send()
 	}
 	fmt.Printf("加密数据：%v\n", bt)
 	ss, err := rsa.DefaultDecrypt(bt)
 	if err != nil {
-		logx.Fatal(err)
+		logx.Fatal().Err(err).Send()
 	}
 	fmt.Printf("加密解密后数据：%s\n", string(ss))
 	fmt.Printf("源数据长度=%d 加密后长度=%d\n", len(ss), len(bt))

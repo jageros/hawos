@@ -14,10 +14,10 @@ package flags
 
 import (
 	"fmt"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/utils"
 	"github.com/fsnotify/fsnotify"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/utils"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	logx2 "github.com/zeromicro/go-zero/core/logx"
@@ -45,10 +45,10 @@ var (
 	keyName = "server.name"
 	keyMode = "server.mode"
 	// log
-	keyLogDir     = "log.dir"
-	keyLogCaller  = "log.caller"
-	keyLogRequest = "log.request"
-	keyLogStat    = "log.stat"
+	keyLogDir    = "log.dir"
+	keyLogCaller = "log.caller"
+	keyLogStdout = "log.stdout"
+	keyLogStat   = "log.stat"
 )
 
 // Option 配置数据结构体
@@ -59,11 +59,10 @@ type Option struct {
 	Configfile string // 配置文件路径
 
 	// log配置
-	UseLogx    bool   // 使用logx
-	LogDir     string // log目录
-	LogCaller  bool   // 是否开启记录输出日志的代码文件行号
-	LogRequest bool   // 是否开启http请求的日志记录
-	LogStat    bool   // 是否开启系统状态日志输出
+	LogDir    string // log目录
+	LogCaller bool   // 是否开启记录输出日志的代码文件行号
+	LogStat   bool   // 是否开启系统状态日志输出
+	LogStdout bool   // 是否输出到控制台
 
 	// other conf
 	Keys map[string]*ValInfo
@@ -84,9 +83,10 @@ func Source() string {
 // defaultOption 返回程序默认的配置项数据
 func defaultOption(name string) *Option {
 	op := &Option{
-		ID:      1,
-		AppName: name,
-		Mode:    "debug",
+		ID:        1,
+		AppName:   name,
+		Mode:      "debug",
+		LogStdout: true,
 	}
 	return op
 }
@@ -100,61 +100,36 @@ func (op *Option) load(v *viper.Viper) {
 	//log
 	op.LogDir = v.GetString(keyLogDir)
 	op.LogCaller = v.GetBool(keyLogCaller)
-	op.LogRequest = v.GetBool(keyLogRequest)
+	op.LogStdout = v.GetBool(keyLogStdout)
 	op.LogStat = v.GetBool(keyLogStat)
 
-	// 根据配置中的mode设置log的等级
-	if !op.UseLogx {
-		logx.DisableZeroLog()
-		return
-	}
-	var logLevel string
-	switch op.Mode {
-	case "release":
-		logLevel = logx.InfoLevel
-	case "info":
-		logLevel = logx.InfoLevel
-	case "warn":
-		logLevel = logx.WarnLevel
-	case "error":
-		logLevel = logx.ErrorLevel
-	case "panic":
-		logLevel = logx.PanicLevel
-	default:
-		logLevel = logx.DebugLevel
-	}
+	err := logx.Init(func(opt *logx.Option) {
+		opt.Level = op.Mode
+		opt.LogPath = op.LogDir
+		opt.Source = op.AppName + strconv.Itoa(op.ID)
+		opt.Caller = op.LogCaller
+		opt.Stdout = op.LogStdout
+	})
 
-	// 配置日志
-	var logOpfs []logx.Option
-	if op.LogCaller {
-		logOpfs = append(logOpfs, logx.SetCaller())
-	}
-	if op.LogRequest {
-		logOpfs = append(logOpfs, logx.SetRequest())
-	}
-	source := Source()
-	if source != "" {
-		logOpfs = append(logOpfs, logx.SetSource(source))
-	}
-	if op.LogDir != "" {
-		logOpfs = append(logOpfs, logx.SetFileOut(op.LogDir, op.AppName))
+	if err != nil {
+		log.Fatalf("logx init err: %v", err)
 	}
 
 	if op.LogStat {
-		logx.SetupZeroLog(logx2.LogConf{
+		err = logx2.SetUp(logx2.LogConf{
 			ServiceName: op.AppName,
 			Mode:        "file",
 			Level:       "info",
 			Path:        op.LogDir + "/stat",
 			KeepDays:    7,
 		})
+		if err != nil {
+			panic(err)
+		}
 	} else {
-		logx.DisableZeroLog()
+		logx2.DisableStat()
+		logx2.Disable()
 	}
-
-	// 初始化日志
-	logx.Init(logLevel, logOpfs...)
-
 }
 
 // Parse 解析配置， 启动参数有传参则忽略配置文件
@@ -176,7 +151,7 @@ func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait f
 	// log
 	pflag.String(keyLogDir, Options.LogDir, "Log dir")
 	pflag.Bool(keyLogCaller, Options.LogCaller, "log caller")
-	pflag.Bool(keyLogRequest, Options.LogRequest, "log request")
+	pflag.Bool(keyLogStdout, Options.LogStdout, "log stdout")
 	pflag.Bool(keyLogStat, Options.LogStat, "log stat")
 
 	// other
@@ -257,9 +232,7 @@ func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait f
 			//设置监听回调函数
 			v.OnConfigChange(func(e fsnotify.Event) {
 				if e.Op == fsnotify.Write {
-					if Options.UseLogx {
-						logx.Sync() // 重新初始化时先同步
-					}
+					logx.Sync()
 					Options.load(v)
 					if Options.OnReload != nil {
 						Options.OnReload()
@@ -283,12 +256,8 @@ func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait f
 
 	wait = func() {
 		err := ctx.Wait()
-		if Options.UseLogx {
-			logx.Infof("Application Stop With: %v", err)
-			logx.Sync()
-		} else {
-			log.Printf("Application Stop With: %v", err)
-		}
+		logx.Err(err).Msg("Application Stop!")
+		logx.Sync()
 	}
 
 	return

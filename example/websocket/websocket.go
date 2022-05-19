@@ -14,11 +14,11 @@ package main
 
 import (
 	"encoding/json"
+	"git.hawtech.cn/jager/hawox/flags"
+	"git.hawtech.cn/jager/hawox/httpx"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/ws"
 	"github.com/gin-gonic/gin"
-	"github.com/jageros/hawox/flags"
-	"github.com/jageros/hawox/httpx"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/ws"
 	"gopkg.in/olahol/melody.v1"
 )
 
@@ -31,45 +31,31 @@ func main() {
 		r := engine.Group("/ws")
 		ws.Init(ctx, r, func(opt ws.Options) {
 			opt.SetRelativePath("/ss")
-			//opt.SetKeys("uid")
-			//opt.SetAuth(func(c *gin.Context) {
-			//	_, ok := httpx.DecodeUrlVal(c, "uid")
-			//	if !ok {
-			//		httpx.ErrInterrupt(c, errcode.InvalidParam)
-			//		return
-			//	}
-			//})
+			opt.HandleConnect(func(sess *melody.Session) {
+				logx.Debug().Msgf("Ws Connect with keys=%+v", sess.Keys)
+			})
+			opt.HandleDisconnect(func(sess *melody.Session) {
+				logx.Info().Msg("Ws Disconnect.")
+			})
+			opt.HandleMessage(onMsg)
 		})
 	}, func(s *httpx.Option) {
 		s.Mode = flags.Options.Mode
-		s.ListenIp = flags.Options.HttpIp
-		s.Port = flags.Options.HttpPort
+		s.ListenIp = "0.0.0.0"
+		s.Port = 8088
 	})
-	ws.OnConnect(func(sess *melody.Session) {
-		logx.Infof("Ws Connect with keys=%+v", sess.Keys)
-	})
-	ws.OnMessage(func(sess *melody.Session, bytes []byte) {
-		//msg := string(bytes)
-		//uid, _ := sess.Get("uid")
-		//logx.Infof("Recv Msg=%s", msg)
-		//filter := ws.NewBlacklistFilter("uid", uid)
-		//err := ws.Broadcast(msg, filter)
-		//if err != nil {
-		//	logx.Errorf("ws Broadcast err: %v", err)
-		//}
-		m := map[string]interface{}{}
-		err := json.Unmarshal(bytes, &m)
-		if err != nil {
-			logx.Errorf("json.Unmarshal err:%v", err)
-			return
-		}
-		logx.Infof("%+v", m)
-		err = ws.Broadcast(bytes, nil)
-		if err != nil {
-			logx.Errorf("Broadcast err: %v", err)
-		}
-	})
-	ws.OnDisConnect(func(session *melody.Session) {
-		logx.Infof("Ws Disconnect.")
-	})
+}
+
+func onMsg(sess *melody.Session, bytes []byte) {
+	m := map[string]interface{}{}
+	err := json.Unmarshal(bytes, &m)
+	if err != nil {
+		logx.Err(err).Msg("json.Unmarshal")
+		return
+	}
+	logx.Info().Msgf("%+v", m)
+	err = ws.Broadcast(bytes, nil)
+	if err != nil {
+		logx.Err(err).Msg("Ws Broadcast")
+	}
 }

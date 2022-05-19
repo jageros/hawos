@@ -13,16 +13,16 @@
 package main
 
 import (
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/example/mygame/internal/service/player"
+	"git.hawtech.cn/jager/hawox/example/mygame/internal/session"
+	"git.hawtech.cn/jager/hawox/example/mygame/protos/meta"
+	"git.hawtech.cn/jager/hawox/example/mygame/protos/pb"
+	"git.hawtech.cn/jager/hawox/httpx"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/ws"
 	"github.com/gin-gonic/gin"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/example/mygame/internal/service/player"
-	"github.com/jageros/hawox/example/mygame/internal/session"
-	"github.com/jageros/hawox/example/mygame/protos/meta"
-	"github.com/jageros/hawox/example/mygame/protos/pb"
-	"github.com/jageros/hawox/httpx"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/ws"
 	"gopkg.in/olahol/melody.v1"
 )
 
@@ -35,46 +35,50 @@ func main() {
 
 	httpx.InitializeHttpServer(ctx, func(engine *gin.Engine) {
 		r := engine.Group("/ws")
-		ws.Init(ctx, r)
+		ws.Init(ctx, r, func(opt ws.Options) {
+			opt.HandleMessageBinary(handleMsg)
+		})
 	}, func(s *httpx.Option) {
 		s.Port = 10088
 	})
-	ws.OnMessageBinary(func(ss *melody.Session, bytes []byte) {
-		arg := &pb.PkgMsg{}
-		err := arg.Unmarshal(bytes)
-		if err != nil {
-			logx.Error(err)
-			return
-		}
-		sess := session.New(1001, 1000, 1)
 
-		resp, pbErr := OnClientMsg(sess, arg)
-		var reply = &pb.PkgMsg{
-			Msgid: arg.Msgid,
-		}
-		if pbErr != nil {
-			data, _ := pbErr.Marshal()
-			reply.Type = pb.MsgType_Err
-			reply.Payload = data
-		} else if resp != nil {
-			reply.Type = pb.MsgType_Reply
-			reply.Payload = resp
-		}
-
-		if reply.Type != pb.MsgType_Unknown {
-			data, _ := reply.Marshal()
-			err = ss.WriteBinary(data)
-			if err != nil {
-				logx.Error(err)
-			}
-		}
-	})
-
-	logx.Infof("server stop with: %v", ctx.Wait())
+	logx.Info().Ints32("MsgID", meta.AllRegisteredMsgid())
+	logx.Err(ctx.Wait()).Msg("Application Stop!")
 	logx.Sync()
 }
 
-func OnClientMsg(ss *session.Session, arg *pb.PkgMsg) ([]byte, *pb.ErrMsg) {
+func handleMsg(ss *melody.Session, bytes []byte) {
+	arg := &pb.PkgMsg{}
+	err := arg.Unmarshal(bytes)
+	if err != nil {
+		logx.Err(err).Msg("pb.PkgMsg Unmarshal")
+		return
+	}
+	sess := session.New(1001, 1000, 1)
+
+	resp, pbErr := onClientMsg(sess, arg)
+	var reply = &pb.PkgMsg{
+		Msgid: arg.Msgid,
+	}
+	if pbErr != nil {
+		data, _ := pbErr.Marshal()
+		reply.Type = pb.MsgType_Err
+		reply.Payload = data
+	} else if resp != nil {
+		reply.Type = pb.MsgType_Reply
+		reply.Payload = resp
+	}
+
+	if reply.Type != pb.MsgType_Unknown {
+		data, _ := reply.Marshal()
+		err = ss.WriteBinary(data)
+		if err != nil {
+			logx.Err(err).Msg("WriteBinary")
+		}
+	}
+}
+
+func onClientMsg(ss *session.Session, arg *pb.PkgMsg) ([]byte, *pb.ErrMsg) {
 	var er = &pb.ErrMsg{
 		Code: 200,
 		Msg:  "successful",

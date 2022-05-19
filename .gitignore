@@ -24,8 +24,11 @@ _testmain.go
 *.test
 *.prof
 
-builder
+builder/
+hawox/
 logs
 jsondata
 pids
 .DS_Store
+
+.idea/

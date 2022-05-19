@@ -13,6 +13,7 @@
 package errcode
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -43,7 +44,7 @@ type err struct {
 }
 
 func (e err) Error() string {
-	return fmt.Sprintf("ErrCode=%d ErrMsg=%s", e.code, e.ErrMsg())
+	return fmt.Sprintf("%d#%s", e.code, e.ErrMsg())
 }
 
 func (e err) Code() int32 {
@@ -88,4 +89,21 @@ func WithErrcode(code int32, err_ error) IErr {
 		err2.errMsg = err_.Error()
 	}
 	return err2
+}
+
+func Errors(errs ...error) error {
+	var errMsg string
+	for _, err := range errs {
+		if err != nil {
+			if errMsg == "" {
+				errMsg = err.Error()
+			} else {
+				errMsg = errMsg + "|" + err.Error()
+			}
+		}
+	}
+	if errMsg != "" {
+		return errors.New(errMsg)
+	}
+	return nil
 }

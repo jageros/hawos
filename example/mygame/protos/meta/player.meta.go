@@ -6,9 +6,9 @@ package meta
 import (
 	"errors"
 
-	sess "github.com/jageros/hawox/example/mygame/protos/meta/sess"
+	sess "git.hawtech.cn/jager/hawox/example/mygame/protos/meta/sess"
 
-	pb "github.com/jageros/hawox/example/mygame/protos/pb"	
+	pb "git.hawtech.cn/jager/hawox/example/mygame/protos/pb"	
 )
 
 //@ C2S_FETCH_CONFIG resp: Config
@@ -19,30 +19,31 @@ var C2S_FETCH_CONFIG = &meta_C2S_FETCH_CONFIG{}
 // implement IMeta
 
 type meta_C2S_FETCH_CONFIG struct {
-	handle func(ss sess.ISession) (resp *pb.Config, err error)
+	handleFn func(ss sess.ISession) (resp *pb.Config, err error)
 }
 
 func (m *meta_C2S_FETCH_CONFIG) RegistryHandle(f func(ss sess.ISession) (resp *pb.Config, err error)) {
-	m.handle = f
+	m.handleFn = f
+	registerMeta(m)
 }
 
-func (m *meta_C2S_FETCH_CONFIG) Handle(ss sess.ISession, arg interface{}) (interface{}, error) {
-	return m.handle(ss)
+func (m *meta_C2S_FETCH_CONFIG) handle(ss sess.ISession, arg interface{}) (interface{}, error) {
+	return m.handleFn(ss)
 }
 
-func (m *meta_C2S_FETCH_CONFIG) GetMsgID() pb.MsgID {
+func (m *meta_C2S_FETCH_CONFIG) getMsgID() pb.MsgID {
 	return pb.MsgID_C2S_FETCH_CONFIG
 }
 
-func (m *meta_C2S_FETCH_CONFIG) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_C2S_FETCH_CONFIG) encodeArg(arg interface{}) ([]byte, error) {
 		return nil, nil
 }
 
-func (m *meta_C2S_FETCH_CONFIG) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_C2S_FETCH_CONFIG) decodeArg(data []byte) (interface{}, error) {
 	return nil, nil
 }
 
-func (m *meta_C2S_FETCH_CONFIG) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_C2S_FETCH_CONFIG) encodeReply(reply interface{}) ([]byte, error) {
 	_reply, ok := reply.(*pb.Config)
 	if !ok {
 		p, ok := reply.([]byte)
@@ -56,7 +57,7 @@ func (m *meta_C2S_FETCH_CONFIG) EncodeReply(reply interface{}) ([]byte, error) {
 	return _reply.Marshal()
 }
 
-func (m *meta_C2S_FETCH_CONFIG) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_C2S_FETCH_CONFIG) decodeReply(data []byte) (interface{}, error) {
 	reply := &pb.Config{}
 	if err := reply.Unmarshal(data); err != nil {
 		return nil, err
@@ -76,22 +77,23 @@ var C2S_PLAYER_LOGIN = &meta_C2S_PLAYER_LOGIN{}
 // implement IMeta
 
 type meta_C2S_PLAYER_LOGIN struct {
-	handle func(ss sess.ISession, arg *pb.LoginArg) (resp *pb.LoginResp, err error)
+	handleFn func(ss sess.ISession, arg *pb.LoginArg) (resp *pb.LoginResp, err error)
 }
 
 func (m *meta_C2S_PLAYER_LOGIN) RegistryHandle(f func(ss sess.ISession, arg *pb.LoginArg) (resp *pb.LoginResp, err error)) {
-	m.handle = f
+	m.handleFn = f
+	registerMeta(m)
 }
 
-func (m *meta_C2S_PLAYER_LOGIN) Handle(ss sess.ISession, arg interface{}) (interface{}, error) {
-	return m.handle(ss, arg.(*pb.LoginArg))
+func (m *meta_C2S_PLAYER_LOGIN) handle(ss sess.ISession, arg interface{}) (interface{}, error) {
+	return m.handleFn(ss, arg.(*pb.LoginArg))
 }
 
-func (m *meta_C2S_PLAYER_LOGIN) GetMsgID() pb.MsgID {
+func (m *meta_C2S_PLAYER_LOGIN) getMsgID() pb.MsgID {
 	return pb.MsgID_C2S_PLAYER_LOGIN
 }
 
-func (m *meta_C2S_PLAYER_LOGIN) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_C2S_PLAYER_LOGIN) encodeArg(arg interface{}) ([]byte, error) {
 	_arg, ok := arg.(*pb.LoginArg)
 	if !ok {
 		p, ok := arg.([]byte)
@@ -105,7 +107,7 @@ func (m *meta_C2S_PLAYER_LOGIN) EncodeArg(arg interface{}) ([]byte, error) {
 	return _arg.Marshal()
 }
 
-func (m *meta_C2S_PLAYER_LOGIN) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_C2S_PLAYER_LOGIN) decodeArg(data []byte) (interface{}, error) {
 	arg := &pb.LoginArg{}
 	if err := arg.Unmarshal(data); err != nil {
 		return nil, err
@@ -114,7 +116,7 @@ func (m *meta_C2S_PLAYER_LOGIN) DecodeArg(data []byte) (interface{}, error) {
 	}
 }
 
-func (m *meta_C2S_PLAYER_LOGIN) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_C2S_PLAYER_LOGIN) encodeReply(reply interface{}) ([]byte, error) {
 	_reply, ok := reply.(*pb.LoginResp)
 	if !ok {
 		p, ok := reply.([]byte)
@@ -128,7 +130,7 @@ func (m *meta_C2S_PLAYER_LOGIN) EncodeReply(reply interface{}) ([]byte, error) {
 	return _reply.Marshal()
 }
 
-func (m *meta_C2S_PLAYER_LOGIN) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_C2S_PLAYER_LOGIN) decodeReply(data []byte) (interface{}, error) {
 	reply := &pb.LoginResp{}
 	if err := reply.Unmarshal(data); err != nil {
 		return nil, err
@@ -148,22 +150,23 @@ var C2S_PLAYER_PLAYING = &meta_C2S_PLAYER_PLAYING{}
 // implement IMeta
 
 type meta_C2S_PLAYER_PLAYING struct {
-	handle func(ss sess.ISession, arg *pb.PlayingArg) (err error)
+	handleFn func(ss sess.ISession, arg *pb.PlayingArg) (err error)
 }
 
 func (m *meta_C2S_PLAYER_PLAYING) RegistryHandle(f func(ss sess.ISession, arg *pb.PlayingArg) (err error)) {
-	m.handle = f
+	m.handleFn = f
+	registerMeta(m)
 }
 
-func (m *meta_C2S_PLAYER_PLAYING) Handle(ss sess.ISession, arg interface{}) (interface{}, error) {
-	return nil, m.handle(ss, arg.(*pb.PlayingArg))
+func (m *meta_C2S_PLAYER_PLAYING) handle(ss sess.ISession, arg interface{}) (interface{}, error) {
+	return nil, m.handleFn(ss, arg.(*pb.PlayingArg))
 }
 
-func (m *meta_C2S_PLAYER_PLAYING) GetMsgID() pb.MsgID {
+func (m *meta_C2S_PLAYER_PLAYING) getMsgID() pb.MsgID {
 	return pb.MsgID_C2S_PLAYER_PLAYING
 }
 
-func (m *meta_C2S_PLAYER_PLAYING) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_C2S_PLAYER_PLAYING) encodeArg(arg interface{}) ([]byte, error) {
 	_arg, ok := arg.(*pb.PlayingArg)
 	if !ok {
 		p, ok := arg.([]byte)
@@ -177,7 +180,7 @@ func (m *meta_C2S_PLAYER_PLAYING) EncodeArg(arg interface{}) ([]byte, error) {
 	return _arg.Marshal()
 }
 
-func (m *meta_C2S_PLAYER_PLAYING) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_C2S_PLAYER_PLAYING) decodeArg(data []byte) (interface{}, error) {
 	arg := &pb.PlayingArg{}
 	if err := arg.Unmarshal(data); err != nil {
 		return nil, err
@@ -186,11 +189,11 @@ func (m *meta_C2S_PLAYER_PLAYING) DecodeArg(data []byte) (interface{}, error) {
 	}
 }
 
-func (m *meta_C2S_PLAYER_PLAYING) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_C2S_PLAYER_PLAYING) encodeReply(reply interface{}) ([]byte, error) {
 	return nil, nil
 }
 
-func (m *meta_C2S_PLAYER_PLAYING) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_C2S_PLAYER_PLAYING) decodeReply(data []byte) (interface{}, error) {
 	return nil, nil
 }
 
@@ -205,34 +208,35 @@ var C2S_PLAYER_LOGOUT = &meta_C2S_PLAYER_LOGOUT{}
 // implement IMeta
 
 type meta_C2S_PLAYER_LOGOUT struct {
-	handle func(ss sess.ISession) (err error)
+	handleFn func(ss sess.ISession) (err error)
 }
 
 func (m *meta_C2S_PLAYER_LOGOUT) RegistryHandle(f func(ss sess.ISession) (err error)) {
-	m.handle = f
+	m.handleFn = f
+	registerMeta(m)
 }
 
-func (m *meta_C2S_PLAYER_LOGOUT) Handle(ss sess.ISession, arg interface{}) (interface{}, error) {
-	return nil, m.handle(ss)
+func (m *meta_C2S_PLAYER_LOGOUT) handle(ss sess.ISession, arg interface{}) (interface{}, error) {
+	return nil, m.handleFn(ss)
 }
 
-func (m *meta_C2S_PLAYER_LOGOUT) GetMsgID() pb.MsgID {
+func (m *meta_C2S_PLAYER_LOGOUT) getMsgID() pb.MsgID {
 	return pb.MsgID_C2S_PLAYER_LOGOUT
 }
 
-func (m *meta_C2S_PLAYER_LOGOUT) EncodeArg(arg interface{}) ([]byte, error) {
+func (m *meta_C2S_PLAYER_LOGOUT) encodeArg(arg interface{}) ([]byte, error) {
 		return nil, nil
 }
 
-func (m *meta_C2S_PLAYER_LOGOUT) DecodeArg(data []byte) (interface{}, error) {
+func (m *meta_C2S_PLAYER_LOGOUT) decodeArg(data []byte) (interface{}, error) {
 	return nil, nil
 }
 
-func (m *meta_C2S_PLAYER_LOGOUT) EncodeReply(reply interface{}) ([]byte, error) {
+func (m *meta_C2S_PLAYER_LOGOUT) encodeReply(reply interface{}) ([]byte, error) {
 	return nil, nil
 }
 
-func (m *meta_C2S_PLAYER_LOGOUT) DecodeReply(data []byte) (interface{}, error) {
+func (m *meta_C2S_PLAYER_LOGOUT) decodeReply(data []byte) (interface{}, error) {
 	return nil, nil
 }
 

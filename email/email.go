@@ -15,8 +15,8 @@ package email
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/jordan-wright/email"
 	"mime"
 	"net/smtp"
@@ -101,7 +101,7 @@ func (e *Email) Send() {
 		default:
 			err := pool.Send(e.mail(), opt_.SendTimeout)
 			if err != nil {
-				logx.Errorf("Send Email err: %v", err)
+				logx.Err(err).Msg("Send Email")
 			}
 		}
 		return nil

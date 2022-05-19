@@ -16,7 +16,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/contextx"
 	"github.com/xtaci/kcp-go"
 	"net"
 	"sync"
@@ -61,10 +61,10 @@ func Server(ctx contextx.Context, opfs ...func(opt *Option)) {
 		fmt.Println(err)
 		return
 	}
-	ctx.Go(func(ctx_ context.Context) error {
+	ctx.Go(func(ctx context.Context) error {
 		for {
 			select {
-			case <-ctx_.Done():
+			case <-ctx.Done():
 				return listen.Close()
 			default:
 			}
@@ -73,8 +73,9 @@ func Server(ctx contextx.Context, opfs ...func(opt *Option)) {
 				return err
 			}
 			if op.HandleConn != nil {
-				ctx.Go(func(ctx_ context.Context) error {
-					return op.HandleConn(ctx_, conn)
+				ctx2, _ := contextx.WithCancel(ctx)
+				ctx2.Go(func(ctx context.Context) error {
+					return op.HandleConn(ctx, conn)
 				})
 			}
 		}

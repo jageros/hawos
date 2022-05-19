@@ -14,10 +14,10 @@ package xlsx
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
-	attribute "github.com/jageros/hawox/mgoattr"
-	"github.com/jageros/hawox/redis"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
+	attribute "git.hawtech.cn/jager/hawox/mgoattr"
+	"git.hawtech.cn/jager/hawox/redis"
 )
 
 var (
@@ -48,12 +48,12 @@ func (g *BaseData) load() error {
 	attr := attribute.NewAttrMgr("xlsxdata", g.I.Name())
 	err := attr.Load()
 	if err != nil {
-		logx.Errorf("load %s ReadFile error, %s", g.I.Name(), err)
+		logx.Err(err).Str("TableName", g.I.Name()).Msg("ReadFile")
 		return err
 	}
 
 	if err := g.I.Init([]byte(attr.GetStr("data"))); err != nil {
-		logx.Errorf("load %s init error, %s", g.I.Name(), err)
+		logx.Err(err).Str("TableName", g.I.Name()).Msg("load init")
 		return err
 	}
 
@@ -97,11 +97,8 @@ func Load(ctx contextx.Context, gdatas ...IData) {
 
 	for i := 0; i < len(allDataList); i++ {
 		data := allDataList[i]
-		if err := data.load(); err != nil {
-			logx.Errorf("xlsxdata %s load err %s", data.Name(), err)
-		} else {
-			logx.Infof("xlsxdata %s load ok", data.Name())
-		}
+		err := data.load()
+		logx.Err(err).Str("TableName", data.Name()).Msg("xlsxdata load")
 	}
 
 	ctx.Go(func(ctx context.Context) error {
@@ -120,7 +117,7 @@ func Load(ctx contextx.Context, gdatas ...IData) {
 					for i := 0; i < len(allDataList); i++ {
 						data := allDataList[i]
 						if err := data.reload(); err != nil {
-							logx.Errorf("xlsxdata %s reload err %s", data.Name(), err)
+							logx.Err(err).Str("TableName", data.Name()).Msg("xlsxdata reload")
 						} else {
 							reloadDatas = append(reloadDatas, data)
 							logx.Infof("xlsxdata %s reload ok", data.Name())

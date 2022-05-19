@@ -19,6 +19,6 @@ package sess
 
 type ISession interface {
 	GetUid() int64
-	GetGateId() int64
+	GetGid() int64
 }
 `

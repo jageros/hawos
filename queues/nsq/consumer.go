@@ -14,8 +14,8 @@ package nsq
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/nsqio/go-nsq"
 	"strings"
 	"time"
@@ -34,7 +34,7 @@ func NewConsumer(ctx contextx.Context, opfs ...func(cfg *Config)) (*Consumer, er
 		ctx: ctx,
 		cfg: defaultConfig(),
 		handler: func(data []byte) {
-			logx.Warnf("Nsq Consumer receive msg, but handler not set!")
+			logx.Warn().Msg("Nsq Consumer receive msg, but handler not set!")
 		},
 	}
 
@@ -73,7 +73,7 @@ func (c *Consumer) HandleMessage(msg *nsq.Message) error {
 
 	take := time.Now().Sub(start)
 	if take > c.cfg.WarnTime {
-		logx.Warnf("Nsq Consumer Msg take: %s", take.String())
+		logx.Warn().Str("take", take.String()).Msg("Nsq Consumer Msg")
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func (c *Consumer) run() {
 			}
 			return ctx.Err()
 		case i := <-c.csr.StopChan:
-			logx.Infof("Consumer StopChan=%d", i)
+			logx.Info().Int("ConsumerStopChan", i).Send()
 			return nil
 		}
 	})

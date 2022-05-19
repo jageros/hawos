@@ -14,10 +14,10 @@ package udpc
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/udpx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/udpx"
 	"net"
 	"time"
 )
@@ -44,9 +44,9 @@ func New(ctx contextx.Context, opfs ...func(opt *ClientOption)) (*Client, error)
 		WriteTimeout: time.Second * 5,
 		OnMsgHandle: func(msgType udpx.MsgType, data []byte) {
 			if msgType == udpx.TextMessage {
-				logx.Infof("RespMsg=%s", string(data))
+				logx.Info().Str("RespMsg", string(data)).Send()
 			} else {
-				logx.Infof("RespMsg is binary.")
+				logx.Info().Msg("RespMsg is binary.")
 			}
 		},
 		SrcAddr: &net.UDPAddr{IP: net.IPv4zero, Port: 59055},

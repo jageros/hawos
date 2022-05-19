@@ -15,8 +15,8 @@ package astro
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jageros/hawox/httpc"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/httpc"
+	"git.hawtech.cn/jager/hawox/logx"
 	"io"
 	"os"
 	"strconv"
@@ -27,13 +27,13 @@ var dateMap map[string]*Date
 func initDateMap() {
 	err := InitFromJsonFile("date.json")
 	if err != nil {
-		logx.Infof("正在从网络文件【http://git.hawtech.cn/jager/data/raw/branch/master/date.json】初始化黄历数据。。。")
+		logx.Info().Msg("正在从网络文件【http://git.hawtech.cn/jager/data/raw/branch/master/date.json】初始化黄历数据。。。")
 		err = InitFromUrl("http://git.hawtech.cn/jager/data/raw/branch/master/date.json")
 	}
 	if err != nil {
-		logx.Errorf("日历初始化失败：%v", err)
+		logx.Err(err).Msg("日历初始化失败.")
 	} else {
-		logx.Infof("1900-2100年黄历数据初始化成功，总天数=%d", len(dateMap))
+		logx.Info().Int("dayNum", len(dateMap)).Msg("1900-2100年黄历数据初始化成功.")
 	}
 }
 

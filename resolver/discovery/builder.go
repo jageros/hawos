@@ -2,8 +2,8 @@ package discovery
 
 import (
 	"context"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/registry"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/registry"
 
 	"google.golang.org/grpc/resolver"
 )
@@ -31,7 +31,7 @@ func NewBuilder(ctx context.Context, d registry.Discovery, opts ...Option) resol
 }
 
 func (d *builder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	logx.Infof("***************** Build Resolver Target=%s *****************", target.Endpoint)
+	logx.Info().Str("target", target.Endpoint).Msg("Build Resolver")
 
 	w, err := d.discoverer.Watch(d.ctx, target.Endpoint)
 	if err != nil {

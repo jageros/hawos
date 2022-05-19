@@ -14,7 +14,7 @@ package httpx
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jageros/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/errcode"
 	"golang.org/x/time/rate"
 	"time"
 )

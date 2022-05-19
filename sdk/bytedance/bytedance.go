@@ -13,8 +13,8 @@
 package bytedance
 
 import (
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/httpc"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/httpc"
 )
 
 const (

@@ -15,9 +15,9 @@ package selector
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/uuid"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/uuid"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )
@@ -170,7 +170,7 @@ func (r *Registry) Register(msgIds []int32) error {
 			}
 		}
 	})
-	logx.Infof("Register Service Namespace=%s Name=%s ID=%s MsgIds=%+v", r.opts.Namespace, md.Name, md.ID, md.MsgIds)
+	logx.Info().Str("Namespace", r.opts.Namespace).Str("Name", md.Name).Str("ID", md.ID).Ints32("MsgIds", md.MsgIds).Msg("Register Service")
 	return nil
 }
 
@@ -184,9 +184,5 @@ func (r *Registry) deregister() {
 	ctx, cancel := context.WithTimeout(r.ctx, time.Second*10)
 	defer cancel()
 	_, err := r.client.Delete(ctx, key)
-	if err != nil {
-		logx.Errorf("pdserver deregister err: %v", err)
-	} else {
-		logx.Infof("deregister service Namespace=%s ServiceName=%s ID=%s", r.opts.Namespace, r.opts.Name, r.opts.Id)
-	}
+	logx.Err(err).Str("Namespace", r.opts.Namespace).Str("Name", r.opts.Name).Str("ID", r.opts.Id).Msg("pdserver deregister")
 }

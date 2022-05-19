@@ -14,7 +14,7 @@ package uuid
 
 import (
 	"fmt"
-	"github.com/jageros/hawox/redis"
+	"git.hawtech.cn/jager/hawox/redis"
 	uuid "github.com/satori/go.uuid"
 	"math/rand"
 	"strconv"

@@ -2,7 +2,7 @@ package mgoattr
 
 import (
 	"context"
-	"github.com/jageros/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/contextx"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io"
@@ -50,6 +50,7 @@ func openMongoDB(addr, dbname, user, passowrd string) (*mongoEngine, error) {
 
 	ctx.Go(func(ctx context.Context) error {
 		tk := time.NewTicker(time.Second * 10)
+		defer tk.Stop()
 		var errNum int
 		for {
 			select {

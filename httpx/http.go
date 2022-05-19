@@ -15,13 +15,13 @@ package httpx
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/logx"
+	"github.com/gin-contrib/cors"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,7 +29,7 @@ func mode(value string) string {
 	switch value {
 	case gin.DebugMode, gin.ReleaseMode, gin.TestMode:
 		return value
-	case logx.InfoLevel, logx.WarnLevel, logx.ErrorLevel, logx.PanicLevel:
+	case "info", "warn", "error", "panic", "fatal":
 		return gin.ReleaseMode
 	}
 	return gin.DebugMode
@@ -57,7 +57,7 @@ func defaultOption() *Option {
 	}
 }
 
-func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine), opfs ...func(s *Option)) {
+func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine), opfs ...func(opt *Option)) {
 	opt := defaultOption()
 
 	for _, opf := range opfs {
@@ -68,14 +68,16 @@ func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine
 	gin.SetMode(opt.Mode)
 	engine := gin.New()
 	gin.ForceConsoleColor()
-	engine.Use(logger(), gin.Recovery(), cors.Default())
+
+	engine.Use(logx.GinLogger(), gin.Recovery(), cors.Default())
+
 	if opt.RateTime > 0 {
 		engine.Use(RateMiddleware(opt.RateTime))
 	}
 
 	registry(engine)
 
-	addr := fmt.Sprintf("%opt:%d", opt.ListenIp, opt.Port)
+	addr := fmt.Sprintf("%s:%d", opt.ListenIp, opt.Port)
 	s := &http.Server{
 		Addr:         addr,
 		Handler:      engine,

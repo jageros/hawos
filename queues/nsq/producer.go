@@ -15,12 +15,13 @@ package nsq
 import (
 	"context"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/errcode"
-	"github.com/jageros/hawox/httpc"
-	"github.com/jageros/hawox/logx"
+	"git.hawtech.cn/jager/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/errcode"
+	"git.hawtech.cn/jager/hawox/httpc"
+	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/nsqio/go-nsq"
 	"math/rand"
+	"strings"
 	"sync"
 )
 
@@ -33,7 +34,7 @@ type Producer struct {
 }
 
 func (p *Producer) getNodeAddr() (string, error) {
-	addrs := fmt.Sprintf(p.opt.Addrs, ";")
+	addrs := strings.Split(p.opt.Addrs, ";")
 	idx := rand.Intn(len(addrs))
 	url := fmt.Sprintf("http://%s/nodes", addrs[idx])
 	resp, err := httpc.RequestReturnMap(httpc.GET, url, httpc.FORM, nil, nil)
@@ -48,7 +49,7 @@ func (p *Producer) getNodeAddr() (string, error) {
 	idx = rand.Intn(len(pds))
 	pd := pds[idx].(map[string]interface{})
 	addr := fmt.Sprintf("%v:%v", pd["broadcast_address"], pd["tcp_port"])
-	logx.Debugf("NsqAddr=%s", addr)
+	logx.Debug().Str("addr", addr).Msg("NsqAddr")
 	return addr, nil
 }
 

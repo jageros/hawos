@@ -13,10 +13,11 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
-	"github.com/jageros/hawox"
-	"github.com/jageros/hawox/tools/metactl/internal/metatemp"
+	"git.hawtech.cn/jager/hawox"
+	"git.hawtech.cn/jager/hawox/tools/metactl/internal/metatemp"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -37,6 +38,7 @@ var (
 )
 
 func main() {
+	start := time.Now()
 	flag.Parse()
 
 	if *v || *version {
@@ -63,7 +65,6 @@ func main() {
 		*pbPkg = fmt.Sprintf("%s/protos/pb", *module)
 	}
 
-	start := time.Now()
 	files, err := ioutil.ReadDir(*inDir)
 	if err != nil {
 		log.Fatalf("ReadDir error: %v", err)
@@ -81,18 +82,41 @@ func main() {
 		}
 	}
 
+	// sess pkg path
 	sessPkg := fmt.Sprintf("%s/%s/meta/sess", *module, *outDir)
 	sessPkg = strings.Replace(sessPkg, "//", "/", -1)
 
-	err = writeToFile(metatemp.GenIMetaFile(*eumName, sessPkg, *pbPkg), fmt.Sprintf("%s/meta/imeta.go", *outDir))
+	// gen imeta.go
+	iMetaFilePath := fmt.Sprintf("%s/meta/imeta.go", *outDir)
+	iMetaFilePath = strings.Replace(iMetaFilePath, "//", "/", -1)
+	err = writeToFile(metatemp.GenIMetaFile(*eumName, sessPkg, *pbPkg), iMetaFilePath, true)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("[Succeed] Gen %s file.", iMetaFilePath)
 
+	// gen sess.go
+	sessPath := fmt.Sprintf("%s/meta/sess", *outDir)
+	sessPath = strings.Replace(sessPath, "//", "/", -1)
+	_, err = os.Stat(sessPath)
+	if os.IsNotExist(err) {
+		err = os.Mkdir(sessPath, fs.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	err = writeToFile(metatemp.ISessTemp, sessPath+"/sess.go", false)
+	if err != nil {
+		log.Printf("[Ignore] %s.", err.Error())
+	} else {
+		log.Printf("[succeed] Gen %s file.", sessPath+"/sess.go")
+	}
+
+	// parse proto file
 	var msgids []string
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".proto") {
-			log.Printf("Parse %s ...", file.Name())
+			log.Printf("[Read] %s ...", file.Name())
 			start := time.Now()
 			path := fmt.Sprintf("%s/%s", *inDir, file.Name())
 			text, err := ioutil.ReadFile(path)
@@ -105,41 +129,24 @@ func main() {
 				continue
 			}
 			fName := strings.Split(file.Name(), ".")[0]
-			err = writeToFile(code, fmt.Sprintf("%s/meta/%s.meta.go", *outDir, fName))
+			err = writeToFile(code, fmt.Sprintf("%s/meta/%s.meta.go", *outDir, fName), true)
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Printf("Gen %s meta file done. (%s)", file.Name(), time.Now().Sub(start).String())
+			log.Printf("[succeed] Gen %s meta file. (%s)", file.Name(), time.Now().Sub(start).String())
 			msgids = append(msgids, msgid...)
 		}
 	}
-	registerFile := metatemp.GenMetaRegister(msgids, *inDir)
-	err = writeToFile(registerFile, fmt.Sprintf("%s/meta/meta_register.go", *outDir))
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	sessPath := fmt.Sprintf("%s/meta/sess", *outDir)
-	sessPath = strings.Replace(sessPath, "//", "/", -1)
-	_, err = os.Stat(sessPath)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(sessPath, fs.ModePerm)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	err = writeToFile(metatemp.ISessTemp, sessPath+"/sess.go")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Gen all meta file done.(%s)", time.Now().Sub(start).String())
+	log.Printf("[Done] Gen all meta file. (%s)", time.Now().Sub(start).String())
 }
 
-func writeToFile(content, path string) error {
+func writeToFile(content, path string, cover bool) error {
 	_, err := os.Stat(path)
 	if err == nil || os.IsExist(err) {
+		if !cover {
+			return errors.New(fmt.Sprintf("%s has exist", path))
+		}
 		err = os.Remove(path)
 		if err != nil {
 			return err

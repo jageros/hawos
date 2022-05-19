@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/eapache/queue"
-	"github.com/jageros/hawox/contextx"
+	"git.hawtech.cn/jager/hawox/contextx"
 	"log"
 	"strconv"
 	"sync"

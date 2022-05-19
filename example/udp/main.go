@@ -13,9 +13,9 @@
 package main
 
 import (
-	"github.com/jageros/hawox/flags"
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/udpx"
+	"git.hawtech.cn/jager/hawox/flags"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/udpx"
 	"net"
 )
 
@@ -28,10 +28,8 @@ func main() {
 		opt.OnBinaryHandle = onBinaryMsgMsg
 	})
 	if err != nil {
-		logx.Fatalf("udp init err: %v", err)
+		logx.Fatal().Err(err).Msg("udp init")
 	}
 }
 
-func onBinaryMsgMsg(addr *net.UDPAddr, data []byte) []byte {
-
-}
+func onBinaryMsgMsg(addr *net.UDPAddr, data []byte) {}

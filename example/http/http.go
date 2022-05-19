@@ -14,8 +14,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jageros/hawox/flags"
-	"github.com/jageros/hawox/httpx"
+	"git.hawtech.cn/jager/hawox/flags"
+	"git.hawtech.cn/jager/hawox/httpx"
 )
 
 func main() {

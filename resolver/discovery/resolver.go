@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/jageros/hawox/logx"
-	"github.com/jageros/hawox/registry"
+	"git.hawtech.cn/jager/hawox/logx"
+	"git.hawtech.cn/jager/hawox/registry"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 )
@@ -28,7 +28,7 @@ func (r *discoveryResolver) watch() {
 
 		ins, err := r.w.Next()
 		if err != nil {
-			logx.Errorf("Failed to watch discovery endpoint: %v", err)
+			logx.Err(err).Msg("Failed to watch discovery endpoint")
 			time.Sleep(time.Second)
 			continue
 		}
