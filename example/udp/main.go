@@ -13,9 +13,9 @@
 package main
 
 import (
-	"git.hawtech.cn/jager/hawox/flags"
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/udpx"
+	"github.com/jager/hawox/flags"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/udpx"
 	"net"
 )
 

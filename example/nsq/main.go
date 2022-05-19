@@ -14,8 +14,8 @@ package main
 
 import (
 	"fmt"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/queues"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/queues"
 	"time"
 )
 

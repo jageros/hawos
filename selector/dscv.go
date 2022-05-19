@@ -15,9 +15,9 @@ package selector
 import (
 	"context"
 	"fmt"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/uuid"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/uuid"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )

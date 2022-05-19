@@ -13,11 +13,11 @@
 package main
 
 import (
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/flags"
-	"git.hawtech.cn/jager/hawox/httpx"
-	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/gin-gonic/gin"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/flags"
+	"github.com/jager/hawox/httpx"
+	"github.com/jager/hawox/logx"
 )
 
 const (

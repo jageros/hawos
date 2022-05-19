@@ -14,10 +14,10 @@ package flags
 
 import (
 	"fmt"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/utils"
 	"github.com/fsnotify/fsnotify"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/utils"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	logx2 "github.com/zeromicro/go-zero/core/logx"

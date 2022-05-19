@@ -13,7 +13,7 @@
 package kafka
 
 import (
-	"git.hawtech.cn/jager/hawox/uuid"
+	"github.com/jager/hawox/uuid"
 	"time"
 )
 

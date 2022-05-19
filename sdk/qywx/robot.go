@@ -14,7 +14,7 @@ package qywx
 
 import (
 	"encoding/json"
-	"git.hawtech.cn/jager/hawox/errcode"
+	"github.com/jager/hawox/errcode"
 	"io/ioutil"
 	"net/http"
 	"strings"

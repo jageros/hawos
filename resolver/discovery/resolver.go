@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/registry"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/registry"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 )

@@ -2,9 +2,9 @@ package dingtalk
 
 import (
 	"fmt"
-	"git.hawtech.cn/jager/hawox/encrypt"
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/httpc"
+	"github.com/jager/hawox/encrypt"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/httpc"
 	"time"
 )
 

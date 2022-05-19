@@ -14,8 +14,8 @@ package regs
 
 import (
 	"context"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/logx"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/logx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"math/rand"
 	"sort"

@@ -13,10 +13,10 @@
 package queues
 
 import (
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/queues/kafka"
-	"git.hawtech.cn/jager/hawox/queues/nsq"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/queues/kafka"
+	"github.com/jager/hawox/queues/nsq"
 	"time"
 )
 

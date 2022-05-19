@@ -14,11 +14,11 @@ package main
 
 import (
 	"encoding/json"
-	"git.hawtech.cn/jager/hawox/flags"
-	"git.hawtech.cn/jager/hawox/httpx"
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/ws"
 	"github.com/gin-gonic/gin"
+	"github.com/jager/hawox/flags"
+	"github.com/jager/hawox/httpx"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/ws"
 	"gopkg.in/olahol/melody.v1"
 )
 

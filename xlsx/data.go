@@ -14,10 +14,10 @@ package xlsx
 
 import (
 	"context"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/logx"
-	attribute "git.hawtech.cn/jager/hawox/mgoattr"
-	"git.hawtech.cn/jager/hawox/redis"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/logx"
+	attribute "github.com/jager/hawox/mgoattr"
+	"github.com/jager/hawox/redis"
 )
 
 var (

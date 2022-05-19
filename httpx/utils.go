@@ -13,8 +13,8 @@
 package httpx
 
 import (
-	"git.hawtech.cn/jager/hawox/errcode"
 	"github.com/gin-gonic/gin"
+	"github.com/jager/hawox/errcode"
 	"net/http"
 )
 

@@ -14,10 +14,10 @@ package udpc
 
 import (
 	"context"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/udpx"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/udpx"
 	"net"
 	"time"
 )

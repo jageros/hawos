@@ -3,7 +3,7 @@ package registry
 import (
 	"context"
 	"fmt"
-	"git.hawtech.cn/jager/hawox/logx"
+	"github.com/jager/hawox/logx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )

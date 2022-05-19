@@ -3,8 +3,8 @@ package timer
 import (
 	"container/heap"
 	"context"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/evq"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/evq"
 	"sync"
 	"time"
 )

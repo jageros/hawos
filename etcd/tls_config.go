@@ -15,7 +15,7 @@ package etcd
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"git.hawtech.cn/jager/hawox/logx"
+	"github.com/jager/hawox/logx"
 	"io/ioutil"
 	"net"
 	"net/http"

@@ -12,7 +12,7 @@
 
 package xlsx
 
-import "git.hawtech.cn/jager/hawox/evq"
+import "github.com/jager/hawox/evq"
 
 var (
 	XLSX_DATA_RELOAD_EVENT = evq.CreateEventID()

@@ -13,10 +13,10 @@
 package ws
 
 import (
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/httpx"
 	"gopkg.in/olahol/melody.v1"
 	"time"
 )

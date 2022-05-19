@@ -16,7 +16,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"git.hawtech.cn/jager/hawox/contextx"
+	"github.com/jager/hawox/contextx"
 	"github.com/xtaci/kcp-go"
 	"net"
 	"sync"

@@ -14,7 +14,7 @@ package sign
 
 import (
 	"fmt"
-	"git.hawtech.cn/jager/hawox/encrypt"
+	"github.com/jager/hawox/encrypt"
 	"sort"
 	"strings"
 )

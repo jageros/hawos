@@ -13,16 +13,16 @@
 package main
 
 import (
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/example/mygame/internal/service/player"
-	"git.hawtech.cn/jager/hawox/example/mygame/internal/session"
-	"git.hawtech.cn/jager/hawox/example/mygame/protos/meta"
-	"git.hawtech.cn/jager/hawox/example/mygame/protos/pb"
-	"git.hawtech.cn/jager/hawox/httpx"
-	"git.hawtech.cn/jager/hawox/logx"
-	"git.hawtech.cn/jager/hawox/ws"
 	"github.com/gin-gonic/gin"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/example/mygame/internal/service/player"
+	"github.com/jager/hawox/example/mygame/internal/session"
+	"github.com/jager/hawox/example/mygame/protos/meta"
+	"github.com/jager/hawox/example/mygame/protos/pb"
+	"github.com/jager/hawox/httpx"
+	"github.com/jager/hawox/logx"
+	"github.com/jager/hawox/ws"
 	"gopkg.in/olahol/melody.v1"
 )
 

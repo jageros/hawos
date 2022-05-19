@@ -13,7 +13,7 @@
 package dingtalk
 
 import (
-	"git.hawtech.cn/jager/hawox/logx"
+	"github.com/jager/hawox/logx"
 	"testing"
 )
 

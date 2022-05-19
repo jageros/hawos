@@ -15,8 +15,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/mgoattr"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/mgoattr"
 	"sync"
 	"time"
 )
@@ -48,7 +48,6 @@ func main() {
 			return nil
 		})
 	}
-
 
 	//for i := 0; i < 10; i++ {
 	//	attr := mgoattr.NewAttrMgr("hello", i)

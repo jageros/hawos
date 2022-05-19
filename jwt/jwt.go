@@ -13,10 +13,10 @@
 package jwt
 
 import (
-	"git.hawtech.cn/jager/hawox/errcode"
-	"git.hawtech.cn/jager/hawox/httpx"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/jager/hawox/errcode"
+	"github.com/jager/hawox/httpx"
 	"time"
 )
 

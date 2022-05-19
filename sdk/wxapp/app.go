@@ -15,7 +15,7 @@ package wxapp
 import (
 	"encoding/json"
 	"fmt"
-	"git.hawtech.cn/jager/hawox/errcode"
+	"github.com/jager/hawox/errcode"
 	"io/ioutil"
 	"net/http"
 )

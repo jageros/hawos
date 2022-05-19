@@ -15,7 +15,7 @@ package main
 import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	dysmsapi20170525 "github.com/alibabacloud-go/dysmsapi-20170525/v2/client"
-	"git.hawtech.cn/jager/hawox/errcode"
+	"github.com/jager/hawox/errcode"
 )
 
 //AccessKey ID： LTAI5tBF3a38nXEhpXW4Up1A

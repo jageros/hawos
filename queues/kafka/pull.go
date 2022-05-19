@@ -14,9 +14,9 @@ package kafka
 
 import (
 	"context"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/Shopify/sarama"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/logx"
 	"strings"
 	"time"
 )

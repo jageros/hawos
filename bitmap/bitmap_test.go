@@ -14,7 +14,7 @@ package bitmap_test
 
 import (
 	"fmt"
-	"git.hawtech.cn/jager/hawox/bitmap"
+	"github.com/jager/hawox/bitmap"
 	"testing"
 )
 

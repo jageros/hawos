@@ -15,9 +15,9 @@ package httpx
 import (
 	"context"
 	"fmt"
-	"git.hawtech.cn/jager/hawox/contextx"
-	"git.hawtech.cn/jager/hawox/logx"
 	"github.com/gin-contrib/cors"
+	"github.com/jager/hawox/contextx"
+	"github.com/jager/hawox/logx"
 	"net"
 	"net/http"
 	"time"

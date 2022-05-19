@@ -14,7 +14,7 @@ package mysql
 
 import (
 	"fmt"
-	"git.hawtech.cn/jager/hawox/redis"
+	"github.com/jager/hawox/redis"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
