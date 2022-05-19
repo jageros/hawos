@@ -13,7 +13,7 @@
 package nsq
 
 import (
-	"github.com/jager/hawox/uuid"
+	"github.com/jageros/hawox/uuid"
 	"time"
 )
 

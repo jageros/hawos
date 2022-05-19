@@ -14,8 +14,8 @@ package udpc
 
 import (
 	"fmt"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/udpx"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/udpx"
 	"net"
 	"testing"
 )

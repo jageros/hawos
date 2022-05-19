@@ -6,9 +6,9 @@ package meta
 import (
 	"errors"
 
-	sess "github.com/jager/hawox/example/mygame/protos/meta/sess"
+	sess "github.com/jageros/hawox/example/mygame/protos/meta/sess"
 
-	pb "github.com/jager/hawox/example/mygame/protos/pb"
+	pb "github.com/jageros/hawox/example/mygame/protos/pb"
 )
 
 //@ C2S_FETCH_CONFIG resp: Config

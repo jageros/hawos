@@ -2,8 +2,8 @@ package wsc
 
 import (
 	"context"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/logx"
 	"net/http"
 	"sync"
 	"time"

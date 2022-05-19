@@ -15,9 +15,9 @@ package wxmini
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jager/hawox/encrypt"
-	"github.com/jager/hawox/errcode"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/encrypt"
+	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/logx"
 	"io/ioutil"
 	"net/http"
 )

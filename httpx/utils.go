@@ -14,7 +14,7 @@ package httpx
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jager/hawox/errcode"
+	"github.com/jageros/hawox/errcode"
 	"net/http"
 )
 

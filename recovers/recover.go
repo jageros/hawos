@@ -2,8 +2,8 @@ package recovers
 
 import (
 	"fmt"
-	"github.com/jager/hawox/errcode"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/logx"
 	"reflect"
 	"runtime"
 )

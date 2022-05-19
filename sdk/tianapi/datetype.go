@@ -14,8 +14,8 @@ package tianapi
 
 import (
 	"fmt"
-	"github.com/jager/hawox/errcode"
-	"github.com/jager/hawox/httpc"
+	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/httpc"
 	"sync"
 )
 

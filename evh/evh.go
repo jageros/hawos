@@ -1,8 +1,8 @@
 package evh
 
 import (
-	"github.com/jager/hawox/logx"
-	"github.com/jager/hawox/recovers"
+	"github.com/jageros/hawox/logx"
+	"github.com/jageros/hawox/recovers"
 )
 
 var (

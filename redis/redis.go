@@ -16,14 +16,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/recovers"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/recovers"
 
 	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/logx"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	zredis "github.com/zeromicro/go-zero/core/stores/redis"
 )

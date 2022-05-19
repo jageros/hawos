@@ -15,8 +15,8 @@ package jwt
 import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/jager/hawox/errcode"
-	"github.com/jager/hawox/httpx"
+	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/httpx"
 	"time"
 )
 

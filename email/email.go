@@ -15,8 +15,8 @@ package email
 import (
 	"context"
 	"fmt"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/logx"
 	"github.com/jordan-wright/email"
 	"mime"
 	"net/smtp"

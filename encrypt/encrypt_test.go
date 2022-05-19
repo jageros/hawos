@@ -14,8 +14,8 @@ package encrypt
 
 import (
 	"fmt"
-	"github.com/jager/hawox/logx"
-	"github.com/jager/hawox/rsa"
+	"github.com/jageros/hawox/logx"
+	"github.com/jageros/hawox/rsa"
 	"testing"
 )
 

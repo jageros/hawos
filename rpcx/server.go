@@ -15,9 +15,9 @@ package rpcx
 import (
 	"context"
 	"fmt"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/registry"
-	"github.com/jager/hawox/uuid"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/registry"
+	"github.com/jageros/hawox/uuid"
 	"google.golang.org/grpc"
 	"net"
 	"time"

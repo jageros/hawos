@@ -14,9 +14,9 @@ package ws
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/errcode"
-	"github.com/jager/hawox/httpx"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/httpx"
 	"gopkg.in/olahol/melody.v1"
 	"time"
 )

@@ -14,10 +14,10 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jager/hawox/errcode"
-	"github.com/jager/hawox/flags"
-	"github.com/jager/hawox/httpx"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/errcode"
+	"github.com/jageros/hawox/flags"
+	"github.com/jageros/hawox/httpx"
+	"github.com/jageros/hawox/logx"
 )
 
 const (

@@ -15,10 +15,10 @@ package main
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/jager/hawox/flags"
-	"github.com/jager/hawox/httpx"
-	"github.com/jager/hawox/logx"
-	"github.com/jager/hawox/ws"
+	"github.com/jageros/hawox/flags"
+	"github.com/jageros/hawox/httpx"
+	"github.com/jageros/hawox/logx"
+	"github.com/jageros/hawox/ws"
 	"gopkg.in/olahol/melody.v1"
 )
 

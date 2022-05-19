@@ -14,8 +14,8 @@ package nsq
 
 import (
 	"context"
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/logx"
 	"github.com/nsqio/go-nsq"
 	"strings"
 	"time"

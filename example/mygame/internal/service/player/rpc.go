@@ -14,9 +14,9 @@ package player
 
 import (
 	"fmt"
-	"github.com/jager/hawox/example/mygame/protos/meta"
-	"github.com/jager/hawox/example/mygame/protos/meta/sess"
-	"github.com/jager/hawox/example/mygame/protos/pb"
+	"github.com/jageros/hawox/example/mygame/protos/meta"
+	"github.com/jageros/hawox/example/mygame/protos/meta/sess"
+	"github.com/jageros/hawox/example/mygame/protos/pb"
 	"time"
 )
 

@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/jager/hawox/example/mygame/protos/meta/sess"
+	"github.com/jageros/hawox/example/mygame/protos/meta/sess"
 
-	pb "github.com/jager/hawox/example/mygame/protos/pb"
+	pb "github.com/jageros/hawox/example/mygame/protos/pb"
 )
 
 var metaData = make(map[pb.MsgID]iMeta)

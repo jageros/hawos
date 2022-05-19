@@ -1,4 +1,4 @@
-module github.com/jager/hawox
+module github.com/jageros/hawox
 
 go 1.18
 

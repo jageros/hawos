@@ -13,9 +13,9 @@
 package main
 
 import (
-	"github.com/jager/hawox/contextx"
-	"github.com/jager/hawox/example/mygame/protos/pb"
-	"github.com/jager/hawox/wsc"
+	"github.com/jageros/hawox/contextx"
+	"github.com/jageros/hawox/example/mygame/protos/pb"
+	"github.com/jageros/hawox/wsc"
 	"log"
 	"net/http"
 	"time"

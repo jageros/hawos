@@ -15,8 +15,8 @@ package astro
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jager/hawox/httpc"
-	"github.com/jager/hawox/logx"
+	"github.com/jageros/hawox/httpc"
+	"github.com/jageros/hawox/logx"
 	"io"
 	"os"
 	"strconv"
