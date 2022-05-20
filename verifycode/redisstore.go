@@ -14,14 +14,16 @@ package verifycode
 
 import (
 	"github.com/jageros/hawox/redis"
+	"time"
 )
 
 type redisStore struct {
+	expireTime time.Duration
 }
 
 // Set sets the digits for the captcha id.
 func (c *redisStore) Set(id string, value string) error {
-	return redis.SetString(id, value)
+	return redis.Set(id, value, c.expireTime)
 }
 
 // Get returns stored digits for the captcha id. Clear indicates
@@ -34,8 +36,16 @@ func (c *redisStore) Get(id string, clear bool) string {
 	return value
 }
 
+func (c *redisStore) Del(id string) {
+	redis.Del(id)
+}
+
 //Verify captcha's answer directly
 func (c *redisStore) Verify(id, answer string, clear bool) bool {
-	value := c.Get(id, clear)
-	return value == answer
+	value, _ := redis.GetString(id)
+	ok := value == answer
+	if ok && clear {
+		redis.Del(id)
+	}
+	return ok
 }

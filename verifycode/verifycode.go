@@ -12,7 +12,10 @@
 
 package verifycode
 
-import "github.com/mojocn/base64Captcha"
+import (
+	"github.com/mojocn/base64Captcha"
+	"time"
+)
 
 const (
 	// Height png height in pixel.
@@ -28,6 +31,7 @@ const (
 )
 
 type Option struct {
+	// EnableRedis user redis as store.
 	EnableRedis bool
 	// Height png height in pixel.
 	Height int
@@ -39,16 +43,19 @@ type Option struct {
 	MaxSkew float64
 	// DotCount Number of background circles.
 	DotCount int
+	// ExpireTime Redis expireTime.
+	ExpireTime time.Duration
 }
 
 func defaultOption() *Option {
 	return &Option{
 		EnableRedis: false,
-		Height:      _Height,
-		Width:       _Width,
-		Length:      _Length,
-		MaxSkew:     _MaxSkew,
-		DotCount:    _DotCount,
+
+		Height:   _Height,
+		Width:    _Width,
+		Length:   _Length,
+		MaxSkew:  _MaxSkew,
+		DotCount: _DotCount,
 	}
 }
 
@@ -62,7 +69,7 @@ func Initialize(opfs ...func(option *Option)) {
 	}
 
 	if opt.EnableRedis {
-		captcha = base64Captcha.NewCaptcha(base64Captcha.NewDriverDigit(opt.Height, opt.Width, opt.Length, opt.MaxSkew, opt.DotCount), &redisStore{})
+		captcha = base64Captcha.NewCaptcha(base64Captcha.NewDriverDigit(opt.Height, opt.Width, opt.Length, opt.MaxSkew, opt.DotCount), &redisStore{expireTime: time.Minute * 8})
 	} else {
 		captcha = base64Captcha.NewCaptcha(base64Captcha.NewDriverDigit(opt.Height, opt.Width, opt.Length, opt.MaxSkew, opt.DotCount), base64Captcha.DefaultMemStore)
 	}
