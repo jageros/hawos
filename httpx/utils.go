@@ -23,28 +23,43 @@ func DecodeUrlVal(c *gin.Context, key string) (string, bool) {
 	if !ok {
 		ErrInterrupt(c, errcode.InvalidParam)
 	}
-
 	return v, ok
 }
 
-func BindQueryArgs(c *gin.Context) (map[string]interface{}, bool) {
-	arg := map[string]interface{}{}
-	err := c.BindQuery(&arg)
+func BindArgs(c *gin.Context, arg interface{}) bool {
+	err := c.Bind(arg)
 	if err != nil {
 		ErrInterrupt(c, errcode.InvalidParam.WithErr(err))
-		return nil, false
+		return false
 	}
-	return arg, true
+	return true
 }
 
-func BindJsonArgs(c *gin.Context) (map[string]interface{}, bool) {
-	arg := map[string]interface{}{}
-	err := c.BindJSON(&arg)
+func BindQueryArgs(c *gin.Context, arg interface{}) bool {
+	err := c.BindQuery(arg)
 	if err != nil {
 		ErrInterrupt(c, errcode.InvalidParam.WithErr(err))
-		return nil, false
+		return false
 	}
-	return arg, true
+	return true
+}
+
+func BindJsonArgs(c *gin.Context, arg interface{}) bool {
+	err := c.BindJSON(arg)
+	if err != nil {
+		ErrInterrupt(c, errcode.InvalidParam.WithErr(err))
+		return false
+	}
+	return true
+}
+
+func BindHeader(c *gin.Context, arg interface{}) bool {
+	err := c.BindHeader(arg)
+	if err != nil {
+		ErrInterrupt(c, errcode.InvalidParam.WithErr(err))
+		return false
+	}
+	return true
 }
 
 func PkgMsgWrite(c *gin.Context, data interface{}) {

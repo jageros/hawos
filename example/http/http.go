@@ -30,7 +30,7 @@ func main() {
 		})
 	}, func(s *httpx.Option) {
 		s.Mode = flags.Options.Mode
-		s.ListenIp = flags.Options.HttpIp
-		s.Port = flags.Options.HttpPort
+		s.ListenIp = flags.GetString("listen_ip")
+		s.Port = flags.GetInt("listen_port")
 	})
 }

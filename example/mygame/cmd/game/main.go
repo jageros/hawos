@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-	logx.Init(logx.DebugLevel)
+	//logx.Init(logx.DebugLevel)
 	ctx, cancel := contextx.Default()
 	defer cancel()
 

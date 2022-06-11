@@ -14,6 +14,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jageros/hawox/logx"
 	"sync"
 	"time"
 )
@@ -48,4 +49,6 @@ func main() {
 	time.Sleep(time.Second)
 	cc.Broadcast()
 	w.Wait()
+
+	logx.Info().Int("xxx", 23).Str("sss", "dddd").Msg("dddd")
 }

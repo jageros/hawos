@@ -50,12 +50,12 @@ type Option struct {
 func defaultOption() *Option {
 	return &Option{
 		EnableRedis: false,
-
-		Height:   _Height,
-		Width:    _Width,
-		Length:   _Length,
-		MaxSkew:  _MaxSkew,
-		DotCount: _DotCount,
+		ExpireTime:  time.Minute * 8,
+		Height:      _Height,
+		Width:       _Width,
+		Length:      _Length,
+		MaxSkew:     _MaxSkew,
+		DotCount:    _DotCount,
 	}
 }
 
@@ -69,7 +69,7 @@ func Initialize(opfs ...func(option *Option)) {
 	}
 
 	if opt.EnableRedis {
-		captcha = base64Captcha.NewCaptcha(base64Captcha.NewDriverDigit(opt.Height, opt.Width, opt.Length, opt.MaxSkew, opt.DotCount), &redisStore{expireTime: time.Minute * 8})
+		captcha = base64Captcha.NewCaptcha(base64Captcha.NewDriverDigit(opt.Height, opt.Width, opt.Length, opt.MaxSkew, opt.DotCount), &redisStore{expireTime: opt.ExpireTime})
 	} else {
 		captcha = base64Captcha.NewCaptcha(base64Captcha.NewDriverDigit(opt.Height, opt.Width, opt.Length, opt.MaxSkew, opt.DotCount), base64Captcha.DefaultMemStore)
 	}
