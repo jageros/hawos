@@ -18,7 +18,9 @@ import (
 )
 
 func Test_xxx(t *testing.T) {
-	err := Init("./test.log", true)
+	err := Init(func(opt *Option) {
+		opt.LogPath = "./logfile.log"
+	})
 	err = errors.New("xxx")
 	Err(err).Str("uid", "1001").Str("roomid", "r1001").Int64("gid", 1999).Msg("Hello World!")
 	Sync()

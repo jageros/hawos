@@ -16,24 +16,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jageros/hawox/contextx"
-	"github.com/jageros/hawox/recovers"
-
 	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	zredis "github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/jageros/hawox/recovers"
 )
 
 var RDB = &Redis{}
 var NotReadyErr = errors.New("RedisNotReady")
 var DefaultAddr = "127.0.0.1:6379"
 var DefaultClusterAddrs = "127.0.0.1:7001;127.0.0.1:7002;127.0.0.1:7003;127.0.0.1:7004;127.0.0.1:7005;127.0.0.1:7006"
-
-var cacheConf = cache.ClusterConf{{Weight: 100, RedisConf: zredis.RedisConf{Host: DefaultAddr}}}
 
 func init() {
 	RDB = defaultRedis()
@@ -53,32 +48,12 @@ func Initialize(ctx contextx.Context, opfs ...func(rdb RdbConfig)) {
 			Username: RDB.Username,
 			Password: RDB.Password,
 		})
-		cacheConf = cache.ClusterConf{}
-		for _, addr := range addrs {
-			cacheConf = append(cacheConf, cache.NodeConf{
-				Weight: 100,
-				RedisConf: zredis.RedisConf{
-					Host: addr,
-					Type: "cluster",
-					Pass: RDB.Password,
-				},
-			})
-		}
 	} else {
 		RDB.cli = redis.NewClient(&redis.Options{
 			Addr:     addrs[0],
 			Username: RDB.Username,
 			Password: RDB.Password,
 		})
-		cacheConf = cache.ClusterConf{
-			{
-				Weight: 100,
-				RedisConf: zredis.RedisConf{
-					Host: addrs[0],
-					Pass: RDB.Password,
-				},
-			},
-		}
 	}
 
 	RDB.ctx = ctx
@@ -131,10 +106,6 @@ func defaultRedis() *Redis {
 		WaitTimeout: time.Second * 5,
 		PingTime:    time.Second * 30,
 	}
-}
-
-func CacheConf() cache.ClusterConf {
-	return cacheConf
 }
 
 func (rd *Redis) SetAddrs(addrs string)                 { rd.Addrs = addrs }
