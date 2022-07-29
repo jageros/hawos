@@ -20,7 +20,6 @@ import (
 	"github.com/jageros/hawox/utils"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	logx2 "github.com/zeromicro/go-zero/core/logx"
 	"log"
 	"strconv"
 	"strings"
@@ -61,7 +60,6 @@ type Option struct {
 	// log配置
 	LogDir    string // log目录
 	LogCaller bool   // 是否开启记录输出日志的代码文件行号
-	LogStat   bool   // 是否开启系统状态日志输出
 	LogStdout bool   // 是否输出到控制台
 
 	// other conf
@@ -101,7 +99,6 @@ func (op *Option) load(v *viper.Viper) {
 	op.LogDir = v.GetString(keyLogDir)
 	op.LogCaller = v.GetBool(keyLogCaller)
 	op.LogStdout = v.GetBool(keyLogStdout)
-	op.LogStat = v.GetBool(keyLogStat)
 
 	err := logx.Init(func(opt *logx.Option) {
 		opt.Level = op.Mode
@@ -113,22 +110,6 @@ func (op *Option) load(v *viper.Viper) {
 
 	if err != nil {
 		log.Fatalf("logx init err: %v", err)
-	}
-
-	if op.LogStat {
-		err = logx2.SetUp(logx2.LogConf{
-			ServiceName: op.AppName,
-			Mode:        "file",
-			Level:       "info",
-			Path:        op.LogDir + "/stat",
-			KeepDays:    7,
-		})
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		logx2.DisableStat()
-		logx2.Disable()
 	}
 }
 
@@ -152,7 +133,6 @@ func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait f
 	pflag.String(keyLogDir, Options.LogDir, "Log dir")
 	pflag.Bool(keyLogCaller, Options.LogCaller, "log caller")
 	pflag.Bool(keyLogStdout, Options.LogStdout, "log stdout")
-	pflag.Bool(keyLogStat, Options.LogStat, "log stat")
 
 	// other
 	for key, v := range Options.Keys {
