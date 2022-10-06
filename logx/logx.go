@@ -22,18 +22,25 @@ import (
 var logger *loggerSt
 
 type Option struct {
-	Level   string
-	LogPath string
-	Stdout  bool
-	Caller  bool
-	Source  string
+	Level       string // 日志等级
+	LogPath     string // 日志路径
+	Stdout      bool   // 是否输出到控制台
+	Caller      bool   // 是否输出文件和行数
+	Source      string // 来源
+	MaxFileSize int    // 日志文件大小的最大值，单位(M)
+	MaxBackups  int    // 最多保留备份数
+	MaxAge      int    // 日志文件保存的时间，单位(天)
+	Compress    bool   // 是否压缩
 }
 
 func defaultOption() *Option {
 	return &Option{
-		Level:  "debug",
-		Stdout: true,
-		Caller: true,
+		Level:       "debug",
+		Stdout:      true,
+		Caller:      true,
+		MaxFileSize: 200,
+		MaxBackups:  5,
+		MaxAge:      7,
 	}
 }
 
@@ -92,7 +99,7 @@ func Init(opfs ...func(opt *Option)) error {
 		return err
 	}
 
-	lg, err := newLoggerWrite(opt.LogPath, opt.Stdout)
+	lg, err := newLoggerWrite(opt.Stdout, opt.LogPath, opt.MaxFileSize, opt.MaxBackups, opt.MaxAge, opt.Compress)
 	if err != nil {
 		return err
 	}
@@ -117,7 +124,7 @@ func Init(opfs ...func(opt *Option)) error {
 }
 
 func Sync() {
-	logger.w.close()
+	//logger.w.close()
 }
 
 func Infof(format string, v ...interface{}) {

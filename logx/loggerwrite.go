@@ -14,23 +14,34 @@ package logx
 
 import (
 	"github.com/rs/zerolog"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
-	"os"
 )
 
 type loggerWrite struct {
-	file   *os.File
+	file   io.Writer
 	stdout io.Writer
 }
 
-func newLoggerWrite(path string, stdout bool) (*loggerWrite, error) {
+// createLumberjackHook 创建LumberjackHook，其作用是为了将日志文件切割，压缩
+func createLumberjackHook(path string, maxFileSize, maxBackups, maxAge int, compress bool) *lumberjack.Logger {
+	return &lumberjack.Logger{
+		Filename:   path,
+		MaxSize:    maxFileSize,
+		MaxBackups: maxBackups,
+		MaxAge:     maxAge,
+		Compress:   compress,
+	}
+}
+
+func newLoggerWrite(stdout bool, path string, maxFileSize, maxBackups, maxAge int, compress bool) (*loggerWrite, error) {
 	lw := &loggerWrite{}
 	if path != "" {
-		f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
-		if err != nil {
-			return nil, err
-		}
-		lw.file = f
+		lg := createLumberjackHook(path, maxFileSize, maxBackups, maxAge, compress)
+		lw.file = zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+			w.Out = lg
+			w.TimeFormat = "[01-02 15:04:05]"
+		})
 	}
 	if stdout {
 		lw.stdout = zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
@@ -54,9 +65,9 @@ func (l *loggerWrite) Write(data []byte) (n int, err error) {
 	return
 }
 
-func (l *loggerWrite) close() (err error) {
-	if l.file != nil {
-		err = l.file.Close()
-	}
-	return
-}
+//func (l *loggerWrite) close() (err error) {
+//	if l.file != nil {
+//		err = l.file.Close()
+//	}
+//	return
+//}

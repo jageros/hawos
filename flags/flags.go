@@ -44,10 +44,13 @@ var (
 	keyName = "server.name"
 	keyMode = "server.mode"
 	// log
-	keyLogDir    = "log.dir"
-	keyLogCaller = "log.caller"
-	keyLogStdout = "log.stdout"
-	keyLogStat   = "log.stat"
+	keyLogDir         = "log.dir"
+	keyLogCaller      = "log.caller"
+	keyLogStdout      = "log.stdout"
+	keyLogMaxFileSize = "log.max_file_size"
+	keyLogMaxBackups  = "log.max_backups"
+	keyLogMaxAge      = "log.max_age"
+	keyLogCompress    = "log.compress"
 )
 
 // Option 配置数据结构体
@@ -58,9 +61,13 @@ type Option struct {
 	Configfile string // 配置文件路径
 
 	// log配置
-	LogDir    string // log目录
-	LogCaller bool   // 是否开启记录输出日志的代码文件行号
-	LogStdout bool   // 是否输出到控制台
+	LogDir          string // log目录
+	LogCaller       bool   // 是否开启记录输出日志的代码文件行号
+	LogStdout       bool   // 是否输出到控制台
+	LogMaxFileSize  int    // 最大日志文件大小 MB
+	LogMaxBackups   int    // 最大备份数量
+	LogMaxAge       int    // 最大日志天数
+	LogFileCompress bool   // 是否压缩日志
 
 	// other conf
 	Keys map[string]*ValInfo
@@ -99,13 +106,22 @@ func (op *Option) load(v *viper.Viper) {
 	op.LogDir = v.GetString(keyLogDir)
 	op.LogCaller = v.GetBool(keyLogCaller)
 	op.LogStdout = v.GetBool(keyLogStdout)
+	op.LogMaxFileSize = v.GetInt(keyLogMaxFileSize)
+	op.LogMaxBackups = v.GetInt(keyLogMaxBackups)
+	op.LogMaxAge = v.GetInt(keyLogMaxAge)
+	op.LogFileCompress = v.GetBool(keyLogCompress)
 
 	err := logx.Init(func(opt *logx.Option) {
 		opt.Level = op.Mode
 		opt.LogPath = op.LogDir
+		opt.Stdout = op.LogStdout
 		opt.Source = op.AppName + strconv.Itoa(op.ID)
 		opt.Caller = op.LogCaller
 		opt.Stdout = op.LogStdout
+		opt.MaxFileSize = op.LogMaxFileSize
+		opt.MaxBackups = op.LogMaxBackups
+		opt.MaxAge = op.LogMaxAge
+		opt.Compress = op.LogFileCompress
 	})
 
 	if err != nil {

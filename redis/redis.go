@@ -185,6 +185,18 @@ func (rd *Redis) HMSet(ctx context.Context, key string, value ...interface{}) *r
 	return cmd
 }
 
+func (rd *Redis) HGet(ctx context.Context, key, subKey string) *redis.StringCmd {
+	if rd.cluster != nil {
+		return rd.cluster.HGet(ctx, key, subKey)
+	}
+	if rd.cli != nil {
+		return rd.cli.HGet(ctx, key, subKey)
+	}
+	var cmd = redis.NewStringCmd(ctx)
+	cmd.SetErr(NotReadyErr)
+	return cmd
+}
+
 func (rd *Redis) HGetAll(ctx context.Context, key string) *redis.StringStringMapCmd {
 	if rd.cluster != nil {
 		return rd.cluster.HGetAll(ctx, key)
@@ -341,6 +353,10 @@ func GetCache(key string, v Encoder) error {
 		return err
 	}
 	return v.Unmarshal(result)
+}
+
+func GetCacheOne(key, subKey string) (string, error) {
+	return RDB.HGet(RDB.ctx, key, subKey).Result()
 }
 
 func LockExec(key string, f func(key string)) error {
