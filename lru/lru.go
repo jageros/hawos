@@ -3,6 +3,7 @@ package lru
 import (
 	"container/list"
 	"errors"
+	"sync"
 )
 
 type EvictCallback func(key interface{}, value interface{})
@@ -10,8 +11,9 @@ type EvictCallback func(key interface{}, value interface{})
 type Cache struct {
 	size      int
 	evictList *list.List
-	items     map[interface{}]*list.Element
-	onEvict   EvictCallback
+	//items     map[interface{}]*list.Element
+	items   *sync.Map
+	onEvict EvictCallback
 }
 
 type entry struct {
@@ -26,32 +28,34 @@ func NewCache(size int, onEvict EvictCallback) (*Cache, error) {
 	c := &Cache{
 		size:      size,
 		evictList: list.New(),
-		items:     make(map[interface{}]*list.Element),
+		items:     &sync.Map{},
 		onEvict:   onEvict,
 	}
 	return c, nil
 }
 
 func (c *Cache) Purge() {
-	for k, v := range c.items {
+	c.items.Range(func(k, v any) bool {
 		if c.onEvict != nil {
-			c.onEvict(k, v.Value.(*entry).value)
+			c.onEvict(k, v.(*list.Element).Value.(*entry).value)
 		}
-		delete(c.items, k)
-	}
+		c.items.Delete(k)
+		return true
+	})
+
 	c.evictList.Init()
 }
 
 func (c *Cache) Add(key, value interface{}) (evicted bool) {
-	if ent, ok := c.items[key]; ok {
+	if v, ok := c.items.Load(key); ok {
+		ent := v.(*list.Element)
 		c.evictList.MoveToFront(ent)
 		ent.Value.(*entry).value = value
-		return false
 	}
 
 	ent := &entry{key, value}
-	entry := c.evictList.PushFront(ent)
-	c.items[key] = entry
+	entry_ := c.evictList.PushFront(ent)
+	c.items.Store(key, entry_)
 
 	evict := c.evictList.Len() > c.size
 	if evict {
@@ -61,7 +65,8 @@ func (c *Cache) Add(key, value interface{}) (evicted bool) {
 }
 
 func (c *Cache) Get(key interface{}) (value interface{}, ok bool) {
-	if ent, ok := c.items[key]; ok {
+	if v, ok_ := c.items.Load(key); ok_ {
+		ent := v.(*list.Element)
 		c.evictList.MoveToFront(ent)
 		return ent.Value.(*entry).value, true
 	}
@@ -69,20 +74,21 @@ func (c *Cache) Get(key interface{}) (value interface{}, ok bool) {
 }
 
 func (c *Cache) Contains(key interface{}) (ok bool) {
-	_, ok = c.items[key]
+	_, ok = c.items.Load(key)
 	return ok
 }
 
 func (c *Cache) Peek(key interface{}) (value interface{}, ok bool) {
-	var ent *list.Element
-	if ent, ok = c.items[key]; ok {
+	if v, ok_ := c.items.Load(key); ok_ {
+		ent := v.(*list.Element)
 		return ent.Value.(*entry).value, true
 	}
-	return nil, ok
+	return nil, false
 }
 
 func (c *Cache) Remove(key interface{}) (present bool) {
-	if ent, ok := c.items[key]; ok {
+	if v, ok_ := c.items.Load(key); ok_ {
+		ent := v.(*list.Element)
 		c.removeElement(ent, true)
 		return true
 	}
@@ -90,7 +96,8 @@ func (c *Cache) Remove(key interface{}) (present bool) {
 }
 
 func (c *Cache) RemoveWithoutCallback(key interface{}) (present bool) {
-	if ent, ok := c.items[key]; ok {
+	if v, ok_ := c.items.Load(key); ok_ {
+		ent := v.(*list.Element)
 		c.removeElement(ent, false)
 		return true
 	}
@@ -117,7 +124,7 @@ func (c *Cache) GetOldest() (key interface{}, value interface{}, ok bool) {
 }
 
 func (c *Cache) Keys() []interface{} {
-	keys := make([]interface{}, len(c.items))
+	var keys []interface{}
 	i := 0
 	for ent := c.evictList.Back(); ent != nil; ent = ent.Prev() {
 		keys[i] = ent.Value.(*entry).key
@@ -140,14 +147,16 @@ func (c *Cache) removeOldest() {
 func (c *Cache) removeElement(e *list.Element, needEvictCallback bool) {
 	c.evictList.Remove(e)
 	kv := e.Value.(*entry)
-	delete(c.items, kv.key)
+	c.items.Delete(kv.key)
 	if needEvictCallback && c.onEvict != nil {
 		c.onEvict(kv.key, kv.value)
 	}
 }
 
 func (c *Cache) ForEach(callback func(value interface{})) {
-	for _, ent := range c.items {
+	c.items.Range(func(key, value any) bool {
+		ent := value.(*list.Element)
 		callback(ent.Value.(*entry).value)
-	}
+		return true
+	})
 }
