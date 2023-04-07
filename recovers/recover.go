@@ -21,3 +21,20 @@ func CatchPanic(f func() error) (err error) {
 	err = f()
 	return
 }
+
+func Catch(f func()) {
+	defer func() {
+		err1 := recover()
+		if err1 != nil {
+			fn := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+			fmt.Println(fn, err1)
+			logx.Errorf("%s panic: %v", fn, err1)
+		}
+	}()
+	f()
+	return
+}
+
+func Go(f func()) {
+	go Catch(f)
+}

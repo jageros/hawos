@@ -38,7 +38,7 @@ var ginLogFormatter = func(params gin.LogFormatterParams) string {
 		lgev = Warn()
 	}
 	if params.ErrorMessage != "" {
-		lgev = Warn().Str("gin-err", params.ErrorMessage)
+		lgev = Error().Str("gin-err", params.ErrorMessage)
 	}
 	lgev.Str("method", params.Method).Int("code", params.StatusCode).
 		Str("ip", params.ClientIP).Str("path", params.Path).

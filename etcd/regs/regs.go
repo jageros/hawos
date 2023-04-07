@@ -195,6 +195,12 @@ func (r *Registry) Register(key, value string) error {
 	}
 
 	// 保持心跳
+	//cli := r.client
+	//ctx := r.ctx
+	//txn := cli.Txn(ctx)
+	//txn.If(clientv3.Compare(clientv3.CreateRevision("/dev/lock"), "=", 0)).Then(
+	//	clientv3.OpPut("/dev/lock", "占用", clientv3.WithLease(1))).Else(clientv3.OpGet("/dev/lock"))
+	//txn.Commit()
 	hb, err := r.client.KeepAlive(r.ctx, grant.ID)
 	if err != nil {
 		return err

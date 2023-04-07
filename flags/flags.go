@@ -130,7 +130,7 @@ func (op *Option) load(v *viper.Viper) {
 }
 
 // Parse 解析配置， 启动参数有传参则忽略配置文件
-func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait func()) {
+func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait func(), cancel func()) {
 	Options = defaultOption(name)
 
 	// 调用该接口时可以改变默认值，但优先顺序为 启动参数 > 配置文件 > 接口传参 > 默认值
@@ -248,7 +248,7 @@ func Parse(name string, opts ...func(opt *Option)) (ctx contextx.Context, wait f
 	Options.load(v)
 
 	// 结合信号和context实现的类似与errgroup的一个库，可以根据自己项目需求设计自己的接口
-	ctx, _ = contextx.Default()
+	ctx, cancel = contextx.Default()
 
 	wait = func() {
 		err := ctx.Wait()

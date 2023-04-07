@@ -16,8 +16,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jageros/hawox/flags"
+	"github.com/jageros/hawox/logx"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"sync"
 	"time"
 )
@@ -31,18 +33,26 @@ var (
 type OpFun func(opt *Option)
 
 type Option struct {
-	Addr     string
-	User     string
-	Password string
-	Database string
+	Addr             string
+	User             string
+	Password         string
+	Database         string
+	MaxIdleConns     int
+	MaxOpenConns     int
+	ConnMaxLifetime  time.Duration
+	LogSlowThreshold time.Duration
 }
 
 func defaultOption() *Option {
 	return &Option{
-		Addr:     "127.0.0.1:3306",
-		User:     "root",
-		Password: "123456",
-		Database: "db_test",
+		Addr:             "127.0.0.1:3306",
+		User:             "root",
+		Password:         "123456",
+		Database:         "db_test",
+		MaxIdleConns:     10,
+		MaxOpenConns:     256,
+		ConnMaxLifetime:  time.Hour,
+		LogSlowThreshold: time.Millisecond * 500,
 	}
 }
 
@@ -52,7 +62,14 @@ func Conn(opfs ...OpFun) (*gorm.DB, error) {
 		opf(opt)
 	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", opt.User, opt.Password, opt.Addr, opt.Database)
-	db, err := gorm.Open(mysql.Open(dsn))
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.New(logx.Logger(), logger.Config{
+			SlowThreshold:             opt.LogSlowThreshold,
+			Colorful:                  true,
+			IgnoreRecordNotFoundError: false,
+			LogLevel:                  logger.Info,
+		}),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -60,9 +77,9 @@ func Conn(opfs ...OpFun) (*gorm.DB, error) {
 	if err != nil {
 		return db, err
 	}
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(256)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetMaxIdleConns(opt.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(opt.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(opt.ConnMaxLifetime)
 	_RwMx.Lock()
 	_DBMap[opt.Database] = db
 	_RwMx.Unlock()

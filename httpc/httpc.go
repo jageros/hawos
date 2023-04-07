@@ -16,7 +16,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -65,9 +65,10 @@ func Request(method METHOD, url string, contentType string, arg map[string]inter
 		data = marshal(arg)
 	}
 
-	req, err := http.NewRequest(method.String(), url, bytes.NewBuffer(data))
+	bf := bytes.NewBuffer(data)
+	req, err := http.NewRequest(method.String(), url, bf)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", contentType)
@@ -76,17 +77,17 @@ func Request(method METHOD, url string, contentType string, arg map[string]inter
 
 	resp, err := cli.Do(req)
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	result, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("ServerReturnErr: " + resp.Status)
+		return result, errors.New("status: " + resp.Status)
 	}
-	return body, nil
+	return
 }
 
 func RequestWithInterface(method METHOD, url string, contentType string, arg map[string]interface{}, header map[string]string, result interface{}) error {

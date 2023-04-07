@@ -8,14 +8,21 @@ import (
 	"time"
 )
 
-var (
-	secret_   = "SECff53e03a11a5754e3773d7d0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	robotUrl_ = "https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-)
+type Option struct {
+	Secret   string
+	RobotUrl string
+}
 
-func SetConfig(secret, robotUrl string) {
-	secret_ = secret
-	robotUrl_ = robotUrl
+type DingTalk struct {
+	opt *Option
+}
+
+func NewDingTalk(opfs ...func(opt *Option)) *DingTalk {
+	opt_ := &Option{}
+	for _, opf := range opfs {
+		opf(opt_)
+	}
+	return &DingTalk{opt: opt_}
 }
 
 type result struct {
@@ -23,12 +30,12 @@ type result struct {
 	Errmsg  string `json:"errmsg"`
 }
 
-func SendMsg(text string) error {
+func (d *DingTalk) SendMsg(text string) error {
 	timestamp := time.Now().UnixMilli()
-	str := fmt.Sprintf("%d\n%s", timestamp, secret_)
-	sign := encrypt.HmacSha256Base64(str, secret_)
+	str := fmt.Sprintf("%d\n%s", timestamp, d.opt.Secret)
+	sign := encrypt.HmacSha256Base64(str, d.opt.Secret)
 
-	url := fmt.Sprintf("%s&timestamp=%d&sign=%s", robotUrl_, timestamp, sign)
+	url := fmt.Sprintf("%s&timestamp=%d&sign=%s", d.opt.RobotUrl, timestamp, sign)
 	arg := map[string]interface{}{
 		"msgtype": "text",
 		"text": map[string]interface{}{

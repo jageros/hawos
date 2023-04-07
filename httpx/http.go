@@ -18,6 +18,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/jageros/hawox/contextx"
 	"github.com/jageros/hawox/logx"
+	"github.com/pkg/errors"
 	"net"
 	"net/http"
 	"time"
@@ -57,7 +58,7 @@ func defaultOption() *Option {
 	}
 }
 
-func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine), opfs ...func(opt *Option)) {
+func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine) error, opfs ...func(opt *Option)) error {
 	opt := defaultOption()
 
 	for _, opf := range opfs {
@@ -75,7 +76,10 @@ func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine
 		engine.Use(RateMiddleware(opt.RateTime))
 	}
 
-	registry(engine)
+	err := registry(engine)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	addr := fmt.Sprintf("%s:%d", opt.ListenIp, opt.Port)
 	s := &http.Server{
@@ -96,4 +100,5 @@ func InitializeHttpServer(ctx contextx.Context, registry func(engine *gin.Engine
 		defer cancel()
 		return s.Shutdown(ctx2)
 	})
+	return nil
 }
