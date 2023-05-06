@@ -27,8 +27,8 @@ var dateMap map[string]*Date
 func initDateMap() {
 	err := InitFromJsonFile("date.json")
 	if err != nil {
-		logx.Info().Msg("正在从网络文件【http://git.hawtech.cn/jager/data/raw/branch/master/date.json】初始化黄历数据。。。")
-		err = InitFromUrl("http://git.hawtech.cn/jager/data/raw/branch/master/date.json")
+		logx.Info().Msg("正在从网络文件【https://raw.githubusercontent.com/jageros/resource/main/date.json】初始化黄历数据。。。")
+		err = InitFromUrl("https://raw.githubusercontent.com/jageros/resource/main/date.json")
 	}
 	if err != nil {
 		logx.Err(err).Msg("日历初始化失败.")

@@ -13,6 +13,7 @@
 package zlog
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -107,6 +108,14 @@ func (l *Logger) With(key string, value interface{}) *Logger {
 	return &Logger{Logger: l.Logger.With(zap.Any(key, value))}
 }
 
+func (l *Logger) Err(err error) *Logger {
+	return &Logger{Logger: l.Logger.With(zap.Error(err))}
+}
+
+func (l *Logger) Arg(value interface{}) *Logger {
+	return &Logger{Logger: l.Logger.With(zap.Any("arg", value))}
+}
+
 func (l *Logger) Namespace(key string) *Logger {
 	return &Logger{Logger: l.Logger.With(zap.Namespace(key))}
 }
@@ -114,5 +123,5 @@ func (l *Logger) Namespace(key string) *Logger {
 // =========================== gorm log ===============================
 
 func (l *Logger) Printf(format string, args ...interface{}) {
-	l.Logger.Sugar().Infof(format, args)
+	l.Logger.WithOptions(zap.WithCaller(false)).Info(fmt.Sprintf(format, args...))
 }

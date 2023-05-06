@@ -54,6 +54,7 @@ package astro
 甲己之年丙作首，乙庚之岁戊为头。
 丙辛之岁寻庚上，丁壬壬寅顺水流。
 若问戊癸何处起，甲寅之上好追求。
+
 甲己合，丙做首丙火生土，所以甲己合化为土。
 乙庚合，乙庚之岁戊为头，戊土生金，所以乙庚合化金。
 丙辛合，丙辛之岁寻庚上，庚金生水，所以丙辛合化水。
@@ -157,5 +158,5 @@ func Combine2(words1, words2 []string) bool {
 }
 
 func Combine1(words1 []string) []string {
-	return true
+	return nil
 }

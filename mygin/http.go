@@ -61,9 +61,9 @@ func defaultOption() *Option {
 }
 
 type Server struct {
-	opt *Option
-	*gin.Engine
-	*http.Server
+	opt    *Option
+	engine *gin.Engine
+	svr    *http.Server
 }
 
 func NewServer(opfs ...func(opt *Option)) *Server {
@@ -83,35 +83,35 @@ func NewServerWithConfig(opt *Option) *Server {
 	if opt.RateTime > 0 {
 		engine.Use(RateMiddleware(opt.RateTime))
 	}
-	return &Server{Engine: engine, opt: opt}
+	return &Server{engine: engine, opt: opt}
 }
 
 func (s *Server) Start(ctx context.Context) error {
 	if s.opt.Handler == nil {
 		return errors.New("Handler is nil")
 	}
-	err := s.opt.Handler(s.Engine)
+	err := s.opt.Handler(s.engine)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	addr := fmt.Sprintf("%s:%d", s.opt.ListenIp, s.opt.Port)
 	svr := &http.Server{
 		Addr:         addr,
-		Handler:      s.Engine,
+		Handler:      s.engine,
 		ReadTimeout:  s.opt.ReadTimeout,
 		WriteTimeout: s.opt.WriteTimeout,
 		BaseContext: func(listener net.Listener) context.Context {
 			return ctx
 		},
 	}
-	s.Server = svr
+	s.svr = svr
 	return svr.ListenAndServe()
 }
 
 func (s *Server) Stop(ctx context.Context) error {
 	ctx2, cancel := context.WithTimeout(ctx, s.opt.CloseTimeout)
 	defer cancel()
-	return s.Shutdown(ctx2)
+	return errors.WithStack(s.svr.Shutdown(ctx2))
 }
 
 //func (s *Server) Endpoint() (*url.URL, error) {
