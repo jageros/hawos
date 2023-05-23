@@ -49,7 +49,7 @@ type loggerSt struct {
 	lg zerolog.Logger
 }
 
-func callerMarshalFunc(file string, line int) string {
+func callerMarshalFunc(pc uintptr, file string, line int) string {
 	fs := strings.Split(file, "/")
 	fsNum := len(fs)
 	if fsNum <= 3 {
